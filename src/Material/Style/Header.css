@@ -1,0 +1,23 @@
+.content {
+    padding: 10px 0 10px 0;
+    border-bottom: 1px solid gainsboro;
+}
+
+.name {
+    margin-top: 25px;
+    font-size: x-large;
+    width: 100vh;
+    font-weight: 700;
+    color: #666666;
+}
+
+.logo {
+    margin-top: 10px;
+    margin-left: 10px;
+    align-content: center;
+}
+
+.col {
+    padding: 0 !important;
+}
+

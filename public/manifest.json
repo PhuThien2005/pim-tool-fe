@@ -1,0 +1,8 @@
+{
+  "short_name": "PIM tool",
+  "name": "Project Information Management",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
