@@ -17,10 +17,11 @@ export default function LocaleDatePicker({
   onChange,
   className = '',
   hasError = false,
-  placeholder = 'yyyy-mm-dd',
+  placeholder,
 }) {
   const { language } = useLanguage();
   const lang = language === 'fr' ? 'fr' : 'en';
+  const displayPlaceholder = placeholder || (lang === 'fr' ? 'aaaa-mm-jj' : 'yyyy-mm-dd');
 
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -116,7 +117,7 @@ export default function LocaleDatePicker({
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
+    <div ref={containerRef} className="locale-datepicker-container">
       <div
         className={`locale-datepicker-wrapper ${hasError ? 'field-error' : ''}`}
         onClick={() => setIsOpen((prev) => !prev)}
@@ -127,7 +128,7 @@ export default function LocaleDatePicker({
           className={`locale-datepicker-input ${className}`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={displayPlaceholder}
           onClick={(e) => {
             e.stopPropagation();
             setIsOpen(true);
@@ -141,7 +142,8 @@ export default function LocaleDatePicker({
             setIsOpen((prev) => !prev);
           }}
           tabIndex={-1}
-          title="Choose date"
+          title={lang === 'fr' ? 'Choisir une date' : 'Choose date'}
+          aria-label={lang === 'fr' ? 'Choisir une date' : 'Choose date'}
         >
           <i className="fa fa-calendar" />
         </button>
@@ -150,13 +152,13 @@ export default function LocaleDatePicker({
       {isOpen && (
         <div className="locale-datepicker-popup">
           <div className="datepicker-header">
-            <button type="button" className="datepicker-nav-btn" onClick={handlePrevMonth}>
+            <button type="button" className="datepicker-nav-btn" onClick={handlePrevMonth} aria-label="Previous month">
               ‹
             </button>
             <span className="datepicker-title">
               {MONTHS[lang][viewMonth]} {viewYear}
             </span>
-            <button type="button" className="datepicker-nav-btn" onClick={handleNextMonth}>
+            <button type="button" className="datepicker-nav-btn" onClick={handleNextMonth} aria-label="Next month">
               ›
             </button>
           </div>
@@ -181,6 +183,35 @@ export default function LocaleDatePicker({
                 {d || ''}
               </button>
             ))}
+          </div>
+
+          <div className="datepicker-footer">
+            <button
+              type="button"
+              className="datepicker-footer-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('');
+                setIsOpen(false);
+              }}
+            >
+              {lang === 'fr' ? 'Effacer' : 'Clear'}
+            </button>
+            <button
+              type="button"
+              className="datepicker-footer-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                onChange(`${y}-${m}-${d}`);
+                setIsOpen(false);
+              }}
+            >
+              {lang === 'fr' ? "Aujourd'hui" : 'Today'}
+            </button>
           </div>
         </div>
       )}

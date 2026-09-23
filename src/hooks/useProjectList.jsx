@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useProjects } from '../context/ProjectContext';
 
@@ -6,22 +7,39 @@ export const fmtDate = (d) => (d ? String(d).split('-').reverse().join('.') : ''
 
 export function useProjectList() {
   const { t } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     projects, totalPages, searchCriteria, setSearchCriteria, resetSearch,
     sortConfig, toggleSort, currentPage, setCurrentPage, deleteProject,
     deleteProjects, loading, groups, loadGroups,
   } = useProjects();
 
-  const [searchInput, setSearchInput] = useState(searchCriteria.searchTerm || '');
-  const [statusInput, setStatusInput] = useState(searchCriteria.status || '');
+  const urlKeyword = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
+  const urlStatus = (searchParams.get('status') || '').toUpperCase();
+  const urlLeader = searchParams.get('leaderVisa') || '';
+  const urlMember = searchParams.get('memberVisa') || '';
+  const urlStartFrom = searchParams.get('startDateFrom') || '';
+  const urlStartTo = searchParams.get('startDateTo') || '';
+  const urlEndFrom = searchParams.get('endDateFrom') || '';
+  const urlEndTo = searchParams.get('endDateTo') || '';
+
+  const initialSearch = urlKeyword || searchCriteria.searchTerm || '';
+  const initialStatus = urlStatus || searchCriteria.status || '';
+  const initialAdv = {
+    leaderVisa: urlLeader || searchCriteria.leaderVisa || '',
+    memberVisa: urlMember || searchCriteria.memberVisa || '',
+    startDateFrom: urlStartFrom || searchCriteria.startDateFrom || '',
+    startDateTo: urlStartTo || searchCriteria.startDateTo || '',
+    endDateFrom: urlEndFrom || searchCriteria.endDateFrom || '',
+    endDateTo: urlEndTo || searchCriteria.endDateTo || '',
+  };
+
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [statusInput, setStatusInput] = useState(initialStatus);
   const [showAdvanced, setShowAdvanced] = useState(
-    Boolean(searchCriteria.leaderVisa || searchCriteria.memberVisa || searchCriteria.startDateFrom || searchCriteria.startDateTo || searchCriteria.endDateFrom || searchCriteria.endDateTo)
+    Boolean(initialAdv.leaderVisa || initialAdv.memberVisa || initialAdv.startDateFrom || initialAdv.startDateTo || initialAdv.endDateFrom || initialAdv.endDateTo)
   );
-  const [advInputs, setAdvInputs] = useState({
-    leaderVisa: searchCriteria.leaderVisa || '', memberVisa: searchCriteria.memberVisa || '',
-    startDateFrom: searchCriteria.startDateFrom || '', startDateTo: searchCriteria.startDateTo || '',
-    endDateFrom: searchCriteria.endDateFrom || '', endDateTo: searchCriteria.endDateTo || '',
-  });
+  const [advInputs, setAdvInputs] = useState(initialAdv);
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [modalConfig, setModalConfig] = useState({ isOpen: false, ids: [], message: '' });
@@ -30,8 +48,32 @@ export function useProjectList() {
   const debounceTimer = useRef();
 
   useEffect(() => {
+    if (urlKeyword || urlStatus || urlLeader || urlMember || urlStartFrom || urlStartTo || urlEndFrom || urlEndTo) {
+      setSearchCriteria({
+        searchTerm: urlKeyword, status: urlStatus, leaderVisa: urlLeader,
+        memberVisa: urlMember, startDateFrom: urlStartFrom, startDateTo: urlStartTo,
+        endDateFrom: urlEndFrom, endDateTo: urlEndTo,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (showAdvanced && !groups.length) loadGroups();
   }, [showAdvanced, groups.length, loadGroups]);
+
+  const updateUrlParams = (c) => {
+    const params = {};
+    if (c.searchTerm) params.searchTerm = c.searchTerm;
+    if (c.status) params.status = c.status;
+    if (c.leaderVisa) params.leaderVisa = c.leaderVisa;
+    if (c.memberVisa) params.memberVisa = c.memberVisa;
+    if (c.startDateFrom) params.startDateFrom = c.startDateFrom;
+    if (c.startDateTo) params.startDateTo = c.startDateTo;
+    if (c.endDateFrom) params.endDateFrom = c.endDateFrom;
+    if (c.endDateTo) params.endDateTo = c.endDateTo;
+    setSearchParams(params, { replace: true });
+  };
 
   const syncSearch = () => ({
     searchTerm: searchInput, status: (statusInput || '').toUpperCase(),
@@ -43,7 +85,11 @@ export function useProjectList() {
   useEffect(() => {
     if (isInitialMount.current) { isInitialMount.current = false; return; }
     clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => setSearchCriteria(syncSearch()), 350);
+    debounceTimer.current = setTimeout(() => {
+      const next = syncSearch();
+      setSearchCriteria(next);
+      updateUrlParams(next);
+    }, 350);
     return () => clearTimeout(debounceTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput, statusInput, advInputs]);
@@ -54,7 +100,9 @@ export function useProjectList() {
     if (e && e.preventDefault) e.preventDefault();
     clearTimeout(debounceTimer.current);
     setActionError('');
-    setSearchCriteria(syncSearch());
+    const next = syncSearch();
+    setSearchCriteria(next);
+    updateUrlParams(next);
     setSelectedIds([]);
   };
 
@@ -66,6 +114,7 @@ export function useProjectList() {
     setAdvInputs({ leaderVisa: '', memberVisa: '', startDateFrom: '', startDateTo: '', endDateFrom: '', endDateTo: '' });
     setActionError('');
     resetSearch();
+    setSearchParams({}, { replace: true });
     setSelectedIds([]);
   };
 

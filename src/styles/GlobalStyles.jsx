@@ -597,6 +597,16 @@ export default function GlobalStyles() {
         gap: 6px;
       }
 
+      .advanced-filter-item .locale-datepicker-container {
+        width: 100%;
+        display: block;
+      }
+
+      .advanced-filter-item .locale-datepicker-wrapper {
+        width: 100%;
+        height: 30px;
+      }
+
       .advanced-filter-label {
         font-size: 12px;
         font-weight: 600;
@@ -898,6 +908,11 @@ export default function GlobalStyles() {
       }
 
       /* Locale Datepicker Styles */
+      .locale-datepicker-container {
+        position: relative;
+        display: inline-block;
+      }
+
       .locale-datepicker-wrapper {
         display: inline-flex;
         align-items: center;
@@ -1038,6 +1053,29 @@ export default function GlobalStyles() {
 
       .datepicker-day-cell.empty {
         cursor: default;
+      }
+
+      .datepicker-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        padding-top: 6px;
+        border-top: 1px solid #EEEEEE;
+      }
+
+      .datepicker-footer-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: var(--font-segoe);
+        font-size: 11px;
+        color: #2E84FB;
+        padding: 2px 4px;
+        font-weight: 600;
+      }
+
+      .datepicker-footer-btn:hover {
+        text-decoration: underline;
       }
 
       /* Autocomplete dropdown */

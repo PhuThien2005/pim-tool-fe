@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Pagination from '../common/Pagination';
 import ConfirmModal from '../common/ConfirmModal';
+import LocaleDatePicker from '../common/LocaleDatePicker';
 import { useProjectList } from '../../hooks/useProjectList';
 
 const COLS = [
@@ -13,8 +14,10 @@ const COLS = [
 const ADV_FIELDS = [
   { label: 'leaderPlaceholder', key: 'leaderVisa', type: 'text', placeholder: 'e.g. DTH', list: 'leader-visas-list' },
   { label: 'memberPlaceholder', key: 'memberVisa', type: 'text', placeholder: 'e.g. BHU' },
-  { label: 'startDateFrom', key: 'startDateFrom', type: 'date' }, { label: 'startDateTo', key: 'startDateTo', type: 'date' },
-  { label: 'endDateFrom', key: 'endDateFrom', type: 'date' }, { label: 'endDateTo', key: 'endDateTo', type: 'date' },
+  { label: 'startDateFrom', key: 'startDateFrom', isDate: true },
+  { label: 'startDateTo', key: 'startDateTo', isDate: true },
+  { label: 'endDateFrom', key: 'endDateFrom', isDate: true },
+  { label: 'endDateTo', key: 'endDateTo', isDate: true },
 ];
 
 export default function ProjectList() {
@@ -49,10 +52,14 @@ export default function ProjectList() {
       {showAdvanced && (
         <div className="advanced-filter-panel">
           <div className="advanced-filter-grid">
-            {ADV_FIELDS.map(({ label, key, type, placeholder, list }) => (
+            {ADV_FIELDS.map(({ label, key, type, placeholder, list, isDate }) => (
               <div key={key} className="advanced-filter-item">
-                <label className="advanced-filter-label">{t(`projectList.${label}`)}</label>
-                <input type={type} className={`pim-input ${type === 'date' ? 'align-center' : ''}`} placeholder={placeholder} value={advInputs[key]} onChange={(e) => handleAdvChange(key, e.target.value)} list={list} />
+                <label className="advanced-filter-label" htmlFor={key}>{t(`projectList.${label}`)}</label>
+                {isDate ? (
+                  <LocaleDatePicker id={key} value={advInputs[key]} onChange={(val) => handleAdvChange(key, val)} />
+                ) : (
+                  <input id={key} type={type} className="pim-input" placeholder={placeholder} value={advInputs[key]} onChange={(e) => handleAdvChange(key, e.target.value)} list={list} />
+                )}
                 {list && (
                   <datalist id={list}>
                     {(groups || []).map((g) => {
