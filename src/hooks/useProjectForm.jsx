@@ -1,12 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useProjects } from '../context/ProjectContext';
 import { projectService } from '../services/projectService';
 
 export function useProjectForm(isEdit = false) {
   const { t } = useLanguage();
-  const history = useHistory();
+  const navigate = useNavigate();
+  const history = useMemo(
+    () => ({
+      push: (path) => navigate(path),
+      replace: (path) => navigate(path, { replace: true }),
+    }),
+    [navigate]
+  );
   const { projectNumber } = useParams();
   const {
     groups: contextGroups,
@@ -215,6 +222,7 @@ export function useProjectForm(isEdit = false) {
 
   return {
     t,
+    navigate,
     history,
     isEdit,
     formData,

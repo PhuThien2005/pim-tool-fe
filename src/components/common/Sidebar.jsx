@@ -16,7 +16,7 @@ export default function Sidebar() {
         <div className="sidebar-section">
           <NavLink
             to="/"
-            exact
+            end
             className={`sidebar-title-link ${isProjectListActive ? 'active' : ''}`}
           >
             {t('sidebar.projectList')}

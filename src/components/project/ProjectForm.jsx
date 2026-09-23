@@ -20,7 +20,7 @@ function FormRow({ label, required, htmlFor, children, width }) {
 export default function ProjectForm({ isEdit = false }) {
   const {
     t,
-    history,
+    navigate,
     formData,
     errorMessage,
     setErrorMessage,
@@ -152,7 +152,7 @@ export default function ProjectForm({ isEdit = false }) {
         <hr className="pim-divider" style={{ marginTop: '36px' }} />
 
         <div className="form-actions-row">
-          <button type="button" className="btn-pim-secondary" onClick={() => history.push('/')}>
+          <button type="button" className="btn-pim-secondary" onClick={() => navigate('/')}>
             {t('projectForm.cancel')}
           </button>
           <button type="submit" className="btn-pim-primary" disabled={isSubmitting}>

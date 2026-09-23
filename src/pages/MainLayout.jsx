@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Route, Redirect, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import ProjectListPage from './ProjectListPage';
@@ -18,15 +18,15 @@ export default function MainLayout() {
         {!isError && <Sidebar />}
 
         <main style={{ flex: 1, padding: isError ? '0' : '16px 24px', overflowY: 'auto' }}>
-          <Switch>
-            <Route exact path="/" component={ProjectListPage} />
-            <Route exact path="/projects" component={ProjectListPage} />
-            <Route exact path="/project/new" component={ProjectCreateEditPage} />
-            <Route exact path="/create-project" component={ProjectCreateEditPage} />
-            <Route exact path="/project/edit/:projectNumber" component={ProjectCreateEditPage} />
-            <Route exact path="/error" component={ErrorPage} />
-            <Redirect to="/" />
-          </Switch>
+          <Routes>
+            <Route path="/" element={<ProjectListPage />} />
+            <Route path="/projects" element={<ProjectListPage />} />
+            <Route path="/project/new" element={<ProjectCreateEditPage />} />
+            <Route path="/create-project" element={<ProjectCreateEditPage />} />
+            <Route path="/project/edit/:projectNumber" element={<ProjectCreateEditPage />} />
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
     </div>

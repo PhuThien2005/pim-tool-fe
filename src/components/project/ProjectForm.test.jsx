@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { BrowserRouter, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from '../../context/LanguageContext';
 import { ProjectProvider } from '../../context/ProjectContext';
 import ProjectForm from './ProjectForm';
@@ -81,9 +81,12 @@ describe('ProjectForm Component Tests', () => {
         <BrowserRouter>
           <LanguageProvider>
             <ProjectProvider>
-              <Route path="/project/edit/:projectNumber">
-                <ProjectForm isEdit={true} />
-              </Route>
+              <Routes>
+                <Route
+                  path="/project/edit/:projectNumber"
+                  element={<ProjectForm isEdit={true} />}
+                />
+              </Routes>
             </ProjectProvider>
           </LanguageProvider>
         </BrowserRouter>
@@ -114,9 +117,12 @@ describe('ProjectForm Component Tests', () => {
         <BrowserRouter>
           <LanguageProvider>
             <ProjectProvider>
-              <Route path="/project/edit/:projectNumber">
-                <ProjectForm isEdit={true} />
-              </Route>
+              <Routes>
+                <Route
+                  path="/project/edit/:projectNumber"
+                  element={<ProjectForm isEdit={true} />}
+                />
+              </Routes>
             </ProjectProvider>
           </LanguageProvider>
         </BrowserRouter>
