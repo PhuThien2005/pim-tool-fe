@@ -1,238 +1,121 @@
-import { INITIAL_PROJECTS, INITIAL_GROUPS, INITIAL_EMPLOYEES } from './mockData';
 import apiClient from './api';
 
-const [K_P, K_G, K_E] = ['pim_projects', 'pim_groups', 'pim_employees'];
-const load = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; } };
-const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-[[K_P, INITIAL_PROJECTS], [K_G, INITIAL_GROUPS], [K_E, INITIAL_EMPLOYEES]].forEach(([k, d]) => !localStorage.getItem(k) && save(k, d));
+const INIT_GROUPS = [1, 2, 3, 4, 5].map((id, i) => ({
+  id, leaderVisa: ['DTH', 'BHU', 'JHV', 'NQN', 'QMV'][i],
+  groupLeader: { id, visa: ['DTH', 'BHU', 'JHV', 'NQN', 'QMV'][i], firstName: ['Thien', 'Hung', 'Hai', 'Nhat', 'Minh'][i], lastName: 'Leader' },
+}));
 
-function checkMembersAndDates(data, employees) {
-  const members = (Array.isArray(data.members) ? data.members.map(m => typeof m === 'string' ? m : m?.visa || '') : (data.members || '').split(','))
-    .map(v => v.trim().toUpperCase()).filter(Boolean);
-  const valid = new Set(employees.map(e => e.visa.toUpperCase()));
-  const invalidVisas = members.filter(v => !valid.has(v));
-  if (invalidVisas.length) throw Object.assign(new Error(`The following visas do not exist: ${invalidVisas.join(', ')}.`), { code: 'INVALID_VISAS', invalidVisas });
-  if (data.endDate && data.startDate && new Date(data.endDate) <= new Date(data.startDate)) throw Object.assign(new Error('End date must be later than Start date.'), { code: 'INVALID_END_DATE' });
-  return members;
-}
+const INIT_EMPS = ['DTH', 'BHU', 'JHV', 'HTV', 'NQN', 'HNH', 'TQP', 'QMV', 'FUN', 'KMA', 'TIN', 'ATN'].map((v, i) => ({
+  id: i + 1, visa: v, firstName: v, lastName: 'Emp',
+}));
+
+const INIT_PROJS = [
+  { id: 1, projectNumber: 3116, name: 'Facturation / Encaissements', customer: 'Les Retaites Populaires', groupId: 1, group: INIT_GROUPS[0], members: ['DTH', 'BHU'], status: 'NEW', startDate: '2004-02-25', endDate: '2004-12-31', version: 1 },
+  { id: 2, projectNumber: 3118, name: 'GKBWEB', customer: 'GKB', groupId: 2, group: INIT_GROUPS[1], members: ['JHV', 'FUN'], status: 'FIN', startDate: '2002-10-10', endDate: '2003-08-15', version: 1 },
+  { id: 3, projectNumber: 7157, name: 'MGBAHN-Maint2015', customer: 'MGB Tourism', groupId: 3, group: INIT_GROUPS[2], members: ['KMA', 'TIN'], status: 'INP', startDate: '2006-09-24', endDate: '2007-06-30', version: 1 },
+  { id: 4, projectNumber: 7174, name: 'SOMED-SPITEX MAINT', customer: 'SOMED-SPITEX MAINT', groupId: 4, group: INIT_GROUPS[3], members: ['DTH', 'ATN'], status: 'NEW', startDate: '2015-10-05', endDate: '', version: 1 },
+  { id: 5, projectNumber: 1004, name: 'IOC CLIENT EXTRANET', customer: 'IOC', groupId: 2, group: INIT_GROUPS[1], members: ['HTV', 'TQP', 'QMV'], status: 'INP', startDate: '2016-01-01', endDate: '2017-01-01', version: 1 },
+];
+
+let store = { p: JSON.parse(JSON.stringify(INIT_PROJS)), g: [...INIT_GROUPS], e: [...INIT_EMPS] };
+
+const toVisas = (m) => (Array.isArray(m) ? m : (m || '').split(',')).map((v) => (typeof v === 'string' ? v.trim().toUpperCase() : v?.visa?.toUpperCase())).filter(Boolean);
+
+const toPayload = (d) => ({
+  projectNumber: +d.projectNumber, name: (d.name || '').trim(), customer: (d.customer || '').trim(),
+  groupId: +d.groupId, status: (d.status || 'NEW').toUpperCase(), startDate: d.startDate,
+  endDate: d.endDate || null, version: d.version ?? 0, visas: toVisas(d.members),
+});
+
+const validate = (d) => {
+  const visas = toVisas(d.members), valid = new Set(store.e.map((e) => e.visa));
+  const bad = visas.filter((v) => !valid.has(v));
+  if (bad.length) throw Object.assign(new Error(`The following visas do not exist: ${bad.join(', ')}.`), { code: 'INVALID_VISAS', invalidVisas: bad });
+  if (d.endDate && d.startDate && new Date(d.endDate) <= new Date(d.startDate)) throw Object.assign(new Error('End date must be later than Start date.'), { code: 'INVALID_END_DATE' });
+  return visas;
+};
 
 export const projectService = {
-  getProjects: () => load(K_P, INITIAL_PROJECTS),
-  getGroups: () => load(K_G, INITIAL_GROUPS),
-  getEmployees: () => load(K_E, INITIAL_EMPLOYEES),
-  getProjectByNumber: (num) => projectService.getProjects().find(p => p.projectNumber === +num) || null,
-  getProjectById: (id) => projectService.getProjects().find(p => p.id === +id) || null,
+  getProjects: () => store.p,
+  getGroups: () => store.g,
+  getEmployees: () => store.e,
+  getProjectByNumber: (num) => store.p.find((p) => p.projectNumber === +num) || null,
+  getProjectById: (id) => store.p.find((p) => p.id === +id) || null,
 
   searchProjects(criteria = {}, pageable = { page: 0, size: 5, sort: 'projectNumber,asc' }) {
     const kw = (criteria.searchTerm || criteria.keyword || '').trim().toLowerCase();
-    const st = criteria.status ? criteria.status.toUpperCase() : '';
+    const st = (criteria.status || '').toUpperCase();
     const leader = (criteria.leaderVisa || '').trim().toLowerCase();
     const member = (criteria.memberVisa || '').trim().toLowerCase();
-    const { startDateFrom: sFrom, startDateTo: sTo, endDateFrom: eFrom, endDateTo: eTo } = criteria;
-    const groupMap = new Map(this.getGroups().map((g) => [g.id, (g.groupLeader?.visa || g.leaderVisa || '').toLowerCase()]));
-    const [sortField = 'projectNumber', sortDir = 'asc'] = (pageable.sort || 'projectNumber,asc').split(',');
+    const [field = 'projectNumber', dir = 'asc'] = (pageable.sort || 'projectNumber,asc').split(',');
 
-    const filtered = this.getProjects().filter((p) => {
+    const filtered = store.p.filter((p) => {
       if (st && p.status !== st) return false;
       if (kw && !`${p.projectNumber} ${p.name} ${p.customer}`.toLowerCase().includes(kw)) return false;
-      if (leader && !(p.leaderVisa || groupMap.get(p.groupId || p.group?.id) || p.group?.groupLeader?.visa || '').toLowerCase().includes(leader)) return false;
-      if (member) {
-        const mems = Array.isArray(p.employees) && p.employees.length
-          ? p.employees.map(e => (e.visa || '').toLowerCase())
-          : Array.isArray(p.members) ? p.members.map(m => (typeof m === 'string' ? m : m?.visa || '').toLowerCase()) : [];
-        if (!mems.some(v => v.includes(member))) return false;
-      }
-      if (sFrom && p.startDate && p.startDate < sFrom) return false;
-      if (sTo && p.startDate && p.startDate > sTo) return false;
-      if (eFrom && (!p.endDate || p.endDate < eFrom)) return false;
-      if (eTo && (!p.endDate || p.endDate > eTo)) return false;
+      if (leader && !(p.group?.leaderVisa || '').toLowerCase().includes(leader)) return false;
+      if (member && !toVisas(p.members).some((v) => v.toLowerCase().includes(member))) return false;
+      if (criteria.startDateFrom && p.startDate && p.startDate < criteria.startDateFrom) return false;
+      if (criteria.startDateTo && p.startDate && p.startDate > criteria.startDateTo) return false;
       return true;
     });
 
     filtered.sort((a, b) => {
-      if (sortField === 'projectNumber') return sortDir === 'asc' ? a.projectNumber - b.projectNumber : b.projectNumber - a.projectNumber;
-      const valA = a[sortField] || '', valB = b[sortField] || '';
-      const cmp = String(valA).localeCompare(String(valB));
-      return sortDir === 'asc' ? cmp : -cmp;
+      const va = a[field] ?? '', vb = b[field] ?? '';
+      const cmp = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb));
+      return dir === 'asc' ? cmp : -cmp;
     });
 
-    const size = pageable.size || 5, page = pageable.page !== undefined ? pageable.page : 0;
-    const totalPages = Math.ceil(filtered.length / size) || 1;
-    const content = filtered.slice(page * size, (page + 1) * size);
-    return { content, totalPages, totalElements: filtered.length, number: page, size, first: !page, last: page >= totalPages - 1, empty: !filtered.length };
+    const size = pageable.size || 5, page = pageable.page || 0;
+    return { content: filtered.slice(page * size, (page + 1) * size), totalPages: Math.ceil(filtered.length / size) || 1, totalElements: filtered.length, number: page, size };
   },
 
-  async searchProjectsApi(criteria = {}, pageable = { page: 0, size: 5, sort: 'projectNumber,asc' }) {
-    const params = {
-      page: pageable.page || 0,
-      size: pageable.size || 5,
-      sort: pageable.sort || 'projectNumber,asc',
-      keyword: (criteria.searchTerm || criteria.keyword || '').trim() || undefined,
-      status: criteria.status ? criteria.status.toUpperCase() : undefined,
-      leaderVisa: (criteria.leaderVisa || '').trim().toUpperCase() || undefined,
-      memberVisa: (criteria.memberVisa || '').trim().toUpperCase() || undefined,
-      startDateFrom: criteria.startDateFrom || undefined,
-      startDateTo: criteria.startDateTo || undefined,
-      endDateFrom: criteria.endDateFrom || undefined,
-      endDateTo: criteria.endDateTo || undefined,
-    };
-    return (await apiClient.get('/projects', { params })).data;
-  },
-
-  async getProjectApi(projectId) {
-    return (await apiClient.get(`/projects/${projectId}`)).data;
-  },
-
-  async createProjectApi(data) {
-    const visas = (Array.isArray(data.members) ? data.members : (data.members || '').split(','))
-      .map(v => typeof v === 'string' ? v.trim().toUpperCase() : v?.visa?.toUpperCase())
-      .filter(Boolean);
-    const payload = {
-      projectNumber: +data.projectNumber,
-      name: (data.name || '').trim(),
-      customer: (data.customer || '').trim(),
-      groupId: +data.groupId,
-      status: (data.status || 'NEW').toUpperCase(),
-      startDate: data.startDate,
-      endDate: data.endDate || null,
-      visas,
-    };
-    return (await apiClient.post('/projects', payload)).data;
-  },
-
-  async updateProjectApi(projectId, data) {
-    const visas = (Array.isArray(data.members) ? data.members : (data.members || '').split(','))
-      .map(v => typeof v === 'string' ? v.trim().toUpperCase() : v?.visa?.toUpperCase())
-      .filter(Boolean);
-    const payload = {
-      version: data.version !== undefined ? data.version : 0,
-      projectNumber: +data.projectNumber,
-      name: (data.name || '').trim(),
-      customer: (data.customer || '').trim(),
-      groupId: +data.groupId,
-      status: (data.status || 'NEW').toUpperCase(),
-      startDate: data.startDate,
-      endDate: data.endDate || null,
-      visas,
-    };
-    return (await apiClient.put(`/projects/${projectId}`, payload)).data;
-  },
-
-  async deleteProjectApi(projectId) {
-    return (await apiClient.delete(`/projects/${projectId}`)).data;
-  },
-
-  async deleteProjectsApi(projectIds = []) {
-    return (await apiClient.delete('/projects', { data: projectIds.map(Number) })).data;
-  },
-
-  async getGroupsApi(pageable = { page: 0, size: 20, sort: 'id,asc' }) {
-    const params = {
-      page: pageable.page !== undefined ? pageable.page : 0,
-      size: pageable.size || 20,
-      sort: pageable.sort || 'id,asc',
-    };
-    return (await apiClient.get('/groups', { params })).data;
-  },
-
-  async searchEmployeesApi(keyword = '', pageable = { page: 0, size: 10, sort: 'visa,asc' }) {
-    const kw = (keyword || '').trim();
-    if (!kw) return { content: [], last: true, number: 0, size: 10, numberOfElements: 0, empty: true };
-    const params = {
-      keyword: kw,
-      page: pageable.page !== undefined ? pageable.page : 0,
-      size: pageable.size || 10,
-      sort: pageable.sort || 'visa,asc',
-    };
-    return (await apiClient.get('/employees', { params })).data;
-  },
-
-  deleteProjects(ids = []) {
-    if (!ids.length) return this.getProjects();
-    const idSet = new Set(ids.map(Number)), projects = this.getProjects();
-    if (projects.some(p => (idSet.has(p.id) || idSet.has(p.projectNumber)) && p.status !== 'NEW')) {
-      throw Object.assign(new Error('Only projects with status "New" can be deleted.'), { code: 'INVALID_STATUS_DELETE' });
+  createProject(d) {
+    if (store.p.some((p) => p.projectNumber === +d.projectNumber)) {
+      throw Object.assign(new Error('The project number already existed. Please select a different project number'), { code: 'DUPLICATE_NUMBER' });
     }
-    const updated = projects.filter(p => !idSet.has(p.id) && !idSet.has(p.projectNumber));
-    save(K_P, updated);
-    if (process.env.NODE_ENV !== 'test') {
-      const realIds = projects.filter(p => idSet.has(p.id) || idSet.has(p.projectNumber)).map(p => p.id || p.projectNumber);
-      this.deleteProjectsApi(realIds).catch(() => {});
-    }
-    return updated;
-  },
-
-  deleteProject(id) {
-    const p = this.getProjectById(id) || this.getProjectByNumber(id);
-    if (p && p.status !== 'NEW') throw Object.assign(new Error('Only projects with status "New" can be deleted.'), { code: 'INVALID_STATUS_DELETE' });
-    const updated = this.deleteProjects([id]);
-    if (process.env.NODE_ENV !== 'test') {
-      this.deleteProjectApi(p?.id || id).catch(() => {});
-    }
-    return updated;
-  },
-
-  validateVisas: (visas) => {
-    const valid = new Set(projectService.getEmployees().map(e => e.visa.toUpperCase())), invalid = visas.map(v => v.trim().toUpperCase()).filter(v => v && !valid.has(v));
-    return { isValid: !invalid.length, invalidVisas: invalid };
-  },
-
-  checkProjectNumberExists: (num, exclude) => projectService.getProjects().some(p => p.projectNumber === +num && (!exclude || p.projectNumber !== +exclude)),
-
-  createProject(data) {
-    if (this.checkProjectNumberExists(+data.projectNumber)) throw Object.assign(new Error('The project number already existed. Please select a different project number'), { code: 'DUPLICATE_NUMBER' });
-    const projects = this.getProjects(), nextId = projects.length ? Math.max(...projects.map(p => p.id || 0)) + 1 : 1;
-    const grp = this.getGroups().find(g => g.id === +data.groupId);
-    const emps = this.getEmployees();
-    const members = checkMembersAndDates(data, emps);
-    const memberEmployees = emps.filter(e => members.includes(e.visa.toUpperCase()));
-    const item = {
-      ...data,
-      id: nextId,
-      projectNumber: +data.projectNumber,
-      name: data.name.trim(),
-      customer: data.customer.trim(),
-      groupId: +data.groupId,
-      group: grp ? { id: grp.id, version: grp.version || 0, groupLeader: grp.groupLeader } : undefined,
-      members,
-      employees: memberEmployees,
-      status: (data.status || 'NEW').toUpperCase(),
-      version: 1,
-    };
-    save(K_P, [...projects, item]);
-    if (process.env.NODE_ENV !== 'test') this.createProjectApi(data).catch(() => {});
+    const grp = store.g.find((g) => g.id === +d.groupId);
+    const item = { ...d, id: Date.now(), projectNumber: +d.projectNumber, group: grp, members: validate(d), status: (d.status || 'NEW').toUpperCase(), version: 1 };
+    store.p.push(item);
+    if (process.env.NODE_ENV !== 'test') apiClient.post('/projects', toPayload(d)).catch(() => {});
     return item;
   },
 
-  updateProject(num, data) {
-    const projects = this.getProjects(), idx = projects.findIndex(p => p.projectNumber === +num);
+  updateProject(num, d) {
+    const idx = store.p.findIndex((p) => p.projectNumber === +num);
     if (idx === -1) throw Object.assign(new Error('Project not found'), { code: 'NOT_FOUND' });
-    const curr = projects[idx];
-    if (data.version !== undefined && curr.version !== undefined && data.version !== curr.version) throw Object.assign(new Error('Concurrent update detected. The project has been modified by another process.'), { code: 'CONCURRENT_UPDATE' });
-    const gid = +(data.groupId || curr.groupId || curr.group?.id);
-    const grp = this.getGroups().find(g => g.id === gid);
-    const emps = this.getEmployees();
-    const members = checkMembersAndDates(data, emps);
-    const memberEmployees = emps.filter(e => members.includes(e.visa.toUpperCase()));
-    const updated = {
-      ...curr,
-      ...data,
-      name: data.name.trim(),
-      customer: data.customer.trim(),
-      groupId: gid,
-      group: grp ? { id: grp.id, version: grp.version || 0, groupLeader: grp.groupLeader } : curr.group,
-      members,
-      employees: memberEmployees,
-      status: (data.status || curr.status || 'NEW').toUpperCase(),
-      version: (curr.version || 0) + 1,
-    };
-    projects[idx] = updated;
-    save(K_P, projects);
-    if (process.env.NODE_ENV !== 'test') this.updateProjectApi(curr.id || num, data).catch(() => {});
+    if (d.version !== undefined && store.p[idx].version !== undefined && d.version !== store.p[idx].version) {
+      throw Object.assign(new Error('Concurrent update detected.'), { code: 'CONCURRENT_UPDATE' });
+    }
+    const updated = { ...store.p[idx], ...d, members: validate(d), version: (store.p[idx].version || 0) + 1 };
+    store.p[idx] = updated;
+    if (process.env.NODE_ENV !== 'test') apiClient.put(`/projects/${store.p[idx].id || num}`, toPayload(d)).catch(() => {});
     return updated;
   },
 
-  resetToDefault: () => { save(K_P, INITIAL_PROJECTS); save(K_G, INITIAL_GROUPS); save(K_E, INITIAL_EMPLOYEES); }
+  deleteProjects(ids = []) {
+    const set = new Set(ids.map(Number));
+    if (store.p.some((p) => (set.has(p.id) || set.has(p.projectNumber)) && p.status !== 'NEW')) {
+      throw Object.assign(new Error('Only projects with status "New" can be deleted.'), { code: 'INVALID_STATUS_DELETE' });
+    }
+    store.p = store.p.filter((p) => !set.has(p.id) && !set.has(p.projectNumber));
+    if (process.env.NODE_ENV !== 'test') apiClient.delete('/projects', { data: Array.from(set) }).catch(() => {});
+    return store.p;
+  },
+
+  deleteProject(id) { return this.deleteProjects([id]); },
+  validateVisas: (visas) => ({ isValid: !visas.some((v) => !store.e.some((e) => e.visa === v.toUpperCase())), invalidVisas: [] }),
+  checkProjectNumberExists: (num) => store.p.some((p) => p.projectNumber === +num),
+
+  // REST API endpoints
+  searchProjectsApi: (c, p) => apiClient.get('/projects', { params: { ...c, ...p } }).then((r) => r.data),
+  getProjectApi: (id) => apiClient.get(`/projects/${id}`).then((r) => r.data),
+  createProjectApi: (d) => apiClient.post('/projects', toPayload(d)).then((r) => r.data),
+  updateProjectApi: (id, d) => apiClient.put(`/projects/${id}`, toPayload(d)).then((r) => r.data),
+  deleteProjectApi: (id) => apiClient.delete(`/projects/${id}`).then((r) => r.data),
+  deleteProjectsApi: (ids) => apiClient.delete('/projects', { data: ids }).then((r) => r.data),
+  getGroupsApi: (p) => apiClient.get('/groups', { params: p }).then((r) => r.data),
+  searchEmployeesApi: (kw, p) => apiClient.get('/employees', { params: { keyword: kw, ...p } }).then((r) => r.data),
+  resetToDefault: () => { store = { p: JSON.parse(JSON.stringify(INIT_PROJS)), g: [...INIT_GROUPS], e: [...INIT_EMPS] }; },
 };
 
 export default projectService;
