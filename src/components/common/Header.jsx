@@ -31,11 +31,11 @@ export default function Header() {
           </button>
         </div>
 
-        <a href="#help" onClick={(e) => e.preventDefault()} className="header-link">
+        <a href="#help" onClick={(e) => e.preventDefault()} className="header-link header-link-help">
           {t('header.help')}
         </a>
 
-        <a href="#logout" onClick={(e) => e.preventDefault()} className="header-link">
+        <a href="#logout" onClick={(e) => e.preventDefault()} className="header-link header-link-logout">
           {t('header.logout')}
         </a>
       </div>

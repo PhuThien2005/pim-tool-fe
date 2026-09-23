@@ -1,0 +1,523 @@
+
+Control
+Project
+ | PIM tool
+ | Component name
+ | Projects detail
+ | 
+---
+Author signature & visa
+ | 
+ | Finished date
+ | 
+ | 
+---
+Task sheet ID
+ | 
+ | Time spent
+ | 1h
+ | 
+---
+Functional Test-cases
+The following section is mandatory and cannot be left empty. It is either filled in by the PL for a specific task sheet, before handing it over to the Engineer, or by the Engineer himself.
+#
+ | Test case description
+ | OK / KO
+ | Corrected
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+
+ | 
+ | 
+ | 
+ | 
+---
+Generic Test-cases
+If the project support multi-browsers, it is recommended to add each browser (and corresponding version) as a column of the below checklist. 
+#
+ | Operations
+ | Result (OK, KO or NA)
+ | Corrected
+ | 
+---
+A
+ | Layout Check
+ | 
+ | 
+ | 
+---
+1
+ | Page properties
+ | 
+ | 
+ | 
+---
+1.1
+ | Check that layout fit well with defined minimal resolution screen
+ | 
+ | 
+ | 
+---
+1.2
+ | Check window's title (spelling) for all application's languages
+ | 
+ | 
+ | 
+---
+1.3
+ | Check that cache is disabled -> do back navigation to check refresh
+ | 
+ | 
+ | 
+---
+1.4
+ | Check keyboard shortcuts are working (for menu, toolbar, button …), should be defined in specification
+ | 
+ | 
+ | 
+---
+1.5
+ | Check resizing behavior (according to specification)
+ | 
+ | 
+ | 
+---
+2
+ | Item's size
+ | 
+ | 
+ | 
+---
+2.1
+ | Check the size of the items: font, button, text control, list control, frame…
+ | 
+ | 
+ | 
+---
+2.2
+ | Check tooltip is implemented correctly (should be defined in specification), tooltip should be available when item’s text can not fully displayed
+ | 
+ | 
+ | 
+---
+3
+ | Item's alignment
+ | 
+ | 
+ | 
+---
+3.1
+ | Check alignment for text field, numeric field, date field 
+(text field -> left, numeric field -> right, date field -> center)
+ | 
+ | 
+ | 
+---
+3.2
+ | Check alignment (vertical and horizontal) of fields within the layout
+ | 
+ | 
+ | 
+---
+4
+ | Read-only fields (should be defined globally in the project)
+ | 
+ | 
+ | 
+---
+4.1
+ | Check color (different color to input fields)
+ | 
+ | 
+ | 
+---
+4.2
+ | Check keyboard navigable (no keyboard navigation on read-only fields)
+ | 
+ | 
+ | 
+---
+5
+ | Default button (should be defined globally in the project)
+ | 
+ | 
+ | 
+---
+5.1
+ | Check existing a default button
+Ex: “Enter” to select the default button on screen 
+      “Esc” to close the popup
+       When a confirmation popup is open, default focus on the default button.
+ | 
+ | 
+ | 
+---
+6
+ | Standard format (should be defined globally in the project)
+ | 
+ | 
+ | 
+---
+6.1
+ | Check standard formats: 
+Entire numbers: ZZZ0
+Floating numbers: XXX0.X0 or X'XX0.X0
+Date: The date is formatted correctly. The application works correctly with the configured locale in customer environment.
+ | 
+ | 
+ | 
+---
+7
+ | Tabular
+ | 
+ | 
+ | 
+---
+7.1
+ | Check the tabular sequence
+ | 
+ | 
+ | 
+---
+8
+ | Menu
+ | 
+ | 
+ | 
+---
+8.1
+ | Check the operations of the menu items of the menu by mouse
+ | 
+ | 
+ | 
+---
+8.2
+ | Check if all menu options are visible and accessible according to access rights
+ | 
+ | 
+ | 
+---
+9
+ | Standard language
+ | 
+ | 
+ | 
+---
+9.1
+ | Check that page is compatible with chosen mark-up language (html4, xhtml1, etc…)
+ | 
+ | 
+ | 
+---
+10
+ | Multilingual text
+ | 
+ | 
+ | 
+---
+10.1
+ | Check GUI object text labels (fields buttons, menus, toolbar tool tips, labels, etc.) in all application's languages (D, F, E, I).
+ | 
+ | 
+ | 
+---
+10.2
+ | Check text of the messages
+ | 
+ | 
+ | 
+---
+10.3
+ | Check text of the reference data (combo box)
+ | 
+ | 
+ | 
+---
+11
+ | Messages
+ | 
+ | 
+ | 
+---
+11.1
+ | Check message title (error, warning, question, information) corresponding the specific case
+ | 
+ | 
+ | 
+---
+11.2
+ | Check icon, font, content , color
+ | 
+ | 
+ | 
+---
+12
+ | Search result list
+ | 
+ | 
+ | 
+---
+12.1
+ | Any list must be sorted by default
+ | 
+ | 
+ | 
+---
+12.2
+ | The search result list should return a limit amount of elements (e.g. max rows = 300)
+ | 
+ | 
+ | 
+---
+13
+ | Focus
+ | 
+ | 
+ | 
+---
+13.1
+ | Check default focus when the screen is opened
+ | 
+ | 
+ | 
+---
+14
+ | Data sorting
+ | 
+ | 
+ | 
+---
+14.1
+ | Check data in list box, combo box, table is sorted by default
+ | 
+ | 
+ | 
+---
+
+B
+ | General Operation Check
+ | 
+ | 
+ | 
+---
+1
+ | Default values
+ | 
+ | 
+ | 
+---
+1.1
+ | Check the default values of the items: text items, numeric items, list items, radio buttons, check boxes…
+ | 
+ | 
+ | 
+---
+2
+ | Max length
+ | 
+ | 
+ | 
+---
+2.1
+ | Check max length of the items: text items, numeric items, editable list items…
+ | 
+ | 
+ | 
+---
+3
+ | Mandatory fields
+ | 
+ | 
+ | 
+---
+3.1
+ | Check mandatory fields in Create and Update processes. In case of error, screen should indicate which field is missing.
+ | 
+ | 
+ | 
+---
+4
+ | Correct border data
+ | 
+ | 
+ | 
+---
+4.1
+ | Check that inputting HTML tags in fields has no effect on page rendering.
+For example : <table>, <tr> or <script>alert(1)</script>
+ | 
+ | 
+ | 
+---
+4.2
+ | Check the correct border data for the items:
+Number: min value, max value
+Text: empty string, max length string, allowed character set (ex: A-Z)
+contains special character: ', %, _
+Date: first date, last date
+Note: Of course, the correct border data has to be suitable to specific business rules
+ | 
+ | 
+ | 
+---
+4.3
+ | File upload component: check file type and size before processing.
+      File type: xls, xlsx, image file format (gif, jpg …)
+      Max file size allowed: 500Kb, 1Mb …
+ | 
+ | 
+ | 
+---
+5
+ | Incorrect data
+ | 
+ | 
+ | 
+---
+5.1
+ | Check the incorrect data for the items:
+Number: < min value, > max value, text data
+Date: 0/1, 32/1, 29/2, 30/2, 31/4, 31/6, 31/9, 31/11, null date
+ | 
+ | 
+ | 
+---
+5.2
+ | Check incorrect data cannot be input through copy/paste
+ | 
+ | 
+ | 
+---
+5.3
+ | Test that SQL-injection is impossible (security)
+ | 
+ | 
+ | 
+---
+6
+ | Date interval
+ | 
+ | 
+ | 
+---
+6.1
+ | Check with start date > end date
+ | 
+ | 
+ | 
+---
+7
+ | Web navigation (should be defined and implement globally in the project)
+ | 
+ | 
+ | 
+---
+7.1
+ | Check management of refresh button
+ | 
+ | 
+ | 
+---
+7.2
+ | Check management of back and forward buttons
+ | 
+ | 
+ | 
+---
+8
+ | Double submit
+ | 
+ | 
+ | 
+---
+8.1
+ | Check that it’s impossible to submit twice by error the form
+ | 
+ | 
+ | 
+---
+9
+ | Standard messages
+ | 
+ | 
+ | 
+---
+9.1
+ | Check save confirmation request when changing context
+ | 
+ | 
+ | 
+---
+9.2
+ | Check delete confirmation request
+ | 
+ | 
+ | 
+---
+9.3
+ | Check referential integrity error on delete
+ | 
+ | 
+ | 
+---
+9.4
+ | Check no data found error
+ | 
+ | 
+ | 
+---
+9.5
+ | Check concurrent update error
+ | 
+ | 
+ | 
+---
+

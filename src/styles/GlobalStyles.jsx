@@ -8,9 +8,9 @@ export default function GlobalStyles() {
          Strict compliance with S25.2 Checklist & Mockups
          ======================================================== */
       :root {
-        --primary-blue: #2F85FA;
-        --primary-blue-hover: #1b6fdc;
-        --text-dark: #333333;
+        --primary-blue: #0088D0;
+        --primary-blue-hover: #0058CC;
+        --text-dark: #666666;
         --text-muted: #666666;
         --border-color: #B9B9B9;
         --border-light: #E0E0E0;
@@ -26,7 +26,7 @@ export default function GlobalStyles() {
         padding: 0;
         font-family: var(--font-segoe);
         background-color: #FAFAFA;
-        color: var(--text-dark);
+        color: #666666;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -57,28 +57,50 @@ export default function GlobalStyles() {
         text-align: right !important;
       }
 
-      /* Error & Form Alert Banner */
+      /* Error & Form Alert Banner (matching pasted-image-5.png) */
       .error-banner {
-        background-color: var(--error-bg);
-        color: var(--error-color);
-        border: 1px solid var(--error-border);
-        padding: 10px 16px;
+        background-color: #F2DEDE;
+        color: #A94442;
+        border: 1px solid #EBCCD1;
+        padding: 12px 18px;
         border-radius: 4px;
         margin-bottom: 24px;
+        font-family: var(--font-segoe);
         font-size: 13px;
         font-weight: 500;
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: space-between;
+      }
+
+      .error-banner-close {
+        background: none;
+        border: none;
+        font-size: 14px;
+        color: #A94442;
+        cursor: pointer;
+        padding: 0 4px;
+        line-height: 1;
+      }
+
+      .error-banner-close:hover {
+        color: #7A2826;
+      }
+
+      .inline-field-error-msg {
+        color: #A94442;
+        font-family: var(--font-segoe);
+        font-size: 13px;
+        font-weight: 500;
       }
 
       .field-error {
-        border-color: var(--error-color) !important;
-        box-shadow: 0 0 0 1px var(--error-color) !important;
+        border-color: #D9534F !important;
+        box-shadow: none !important;
       }
 
       .required-asterisk {
-        color: var(--error-color);
+        color: #D9534F;
         margin-left: 4px;
         font-weight: bold;
       }
@@ -92,9 +114,9 @@ export default function GlobalStyles() {
 
       /* Button Styles (S25.2: Segoe UI, 4px border radius, clear states) */
       .btn-pim-primary {
-        background-color: var(--primary-blue);
+        background: linear-gradient(to top, #0058CC 0%, #0084CC 100%);
         color: #FFFFFF;
-        border: 1px solid var(--primary-blue);
+        border: 1px solid #0058CC;
         border-radius: 4px;
         height: 35px;
         padding: 0 24px;
@@ -105,12 +127,13 @@ export default function GlobalStyles() {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: background-color 0.15s ease-in-out;
+        transition: opacity 0.15s ease-in-out;
       }
 
       .btn-pim-primary:hover:not(:disabled) {
-        background-color: var(--primary-blue-hover);
-        border-color: var(--primary-blue-hover);
+        opacity: 0.9;
+        background: linear-gradient(to top, #004FB8 0%, #0077B8 100%);
+        border-color: #004FB8;
       }
 
       .btn-pim-primary:disabled {
@@ -203,7 +226,7 @@ export default function GlobalStyles() {
       .pim-header {
         background-color: #FFFFFF;
         border-bottom: 1px solid #E0E0E0;
-        padding: 12px 32px;
+        padding: 12px 48px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -226,71 +249,111 @@ export default function GlobalStyles() {
         font-family: var(--font-segoe);
         font-size: 22px;
         font-weight: 600;
-        color: var(--text-dark);
+        color: #666666;
       }
 
       .header-right {
         display: flex;
         align-items: center;
-        gap: 28px;
+        gap: 24px;
         font-size: 14px;
         font-family: var(--font-segoe);
       }
 
       .lang-switch {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 6px;
-        font-weight: 500;
+        justify-content: center;
+        width: 52px;
+        min-width: 52px;
       }
 
       .lang-btn {
         background: none;
         border: none;
         padding: 0;
+        width: 22px;
+        min-width: 22px;
+        text-align: center;
         cursor: pointer;
-        color: var(--primary-blue);
+        color: #666666;
         font-family: var(--font-segoe);
         font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
       }
 
       .lang-btn.active {
-        font-weight: 700;
-        color: var(--primary-blue);
+        color: #018FE1;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .lang-btn:hover {
+        color: #018FE1;
         text-decoration: underline;
       }
 
       .lang-divider {
-        color: #999999;
+        color: #018FE1;
+        margin: 0 2px;
+        user-select: none;
       }
 
-      .header-link {
-        color: var(--primary-blue);
+      .header-link-help {
+        color: #666666 !important;
         text-decoration: none;
         cursor: pointer;
+        min-width: 36px;
+        text-align: center;
+        font-weight: 600;
       }
 
-      .header-link:hover {
+      .header-link-help:hover,
+      .header-link-help.active {
+        color: #018FE1 !important;
         text-decoration: underline;
       }
 
-      .header-link.disabled {
-        color: #888888;
-        cursor: default;
+      .header-link-logout {
+        color: #666666 !important;
+        text-decoration: none;
+        cursor: pointer;
+        min-width: 60px;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .header-link-logout:hover {
+        text-decoration: underline;
+        color: #333333 !important;
       }
 
       /* Sidebar Styles */
       .pim-sidebar {
-        width: 220px;
-        min-width: 200px;
-        padding: 24px 20px 24px 0;
+        width: 240px;
+        min-width: 220px;
+        padding: 32px 0;
         border-right: 1px solid #EAEAEA;
         min-height: calc(100vh - 70px);
         background-color: #FFFFFF;
+        display: flex;
+        justify-content: center;
+      }
+
+      .sidebar-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        width: fit-content;
+        min-width: 130px;
       }
 
       .sidebar-section {
         margin-bottom: 24px;
+        width: 100%;
+        text-align: left;
       }
 
       .sidebar-title-link {
@@ -298,36 +361,53 @@ export default function GlobalStyles() {
         font-family: var(--font-segoe);
         font-size: 18px;
         font-weight: 600;
-        color: var(--primary-blue);
+        color: #666666;
         text-decoration: none;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         cursor: pointer;
+        padding: 0;
+        text-align: left;
       }
 
       .sidebar-title-link:hover {
         text-decoration: underline;
-        color: var(--primary-blue-hover);
+        color: #2E84FB;
       }
 
       .sidebar-title-link.active {
-        font-weight: 700;
+        font-weight: 600;
+        color: #2E84FB;
       }
 
       .sidebar-heading {
         font-family: var(--font-segoe);
         font-size: 18px;
         font-weight: 600;
-        color: var(--primary-blue);
-        margin-bottom: 8px;
+        color: #666666;
+        margin-bottom: 12px;
+        padding: 0;
+        text-align: left;
+      }
+
+      .sidebar-heading.active {
+        color: #2E84FB;
       }
 
       .sidebar-nav {
         list-style: none;
         padding: 0;
-        margin: 0 0 0 16px;
+        margin: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        width: 100%;
+        text-align: left;
+      }
+
+      .sidebar-nav-item {
+        padding: 0;
+        margin: 0;
+        text-align: left;
       }
 
       .sidebar-nav-item a {
@@ -335,23 +415,24 @@ export default function GlobalStyles() {
         font-size: 14px;
         text-decoration: none;
         display: block;
-        color: var(--text-muted);
+        color: #666666;
         font-weight: 400;
+        text-align: left;
       }
 
       .sidebar-nav-item a.active {
         font-weight: 600;
-        color: #333333;
+        color: #2E84FB;
       }
 
       .sidebar-nav-item a.disabled {
-        color: #888888;
+        color: #666666;
         cursor: default;
       }
 
       .sidebar-nav-item a:hover:not(.disabled) {
         text-decoration: underline;
-        color: #333333;
+        color: #2E84FB;
       }
 
       /* Pagination Styles */
@@ -384,7 +465,7 @@ export default function GlobalStyles() {
         padding: 0 10px;
         font-family: var(--font-segoe);
         font-size: 13px;
-        color: var(--primary-blue);
+        color: #666666;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -394,12 +475,13 @@ export default function GlobalStyles() {
 
       .pim-pagination-btn:hover:not(:disabled) {
         background-color: #F0F4FF;
+        color: #0088D0;
       }
 
       .pim-pagination-btn.active {
-        color: var(--primary-blue);
+        color: #0088D0;
         font-weight: bold;
-        background-color: #EBF3FE;
+        background-color: #FFFFFF;
         text-decoration: underline;
       }
 
@@ -455,7 +537,7 @@ export default function GlobalStyles() {
       .btn-reset-search {
         background: none;
         border: none;
-        color: var(--primary-blue);
+        color: #2E85F9;
         font-family: var(--font-segoe);
         font-size: 14px;
         cursor: pointer;
@@ -464,6 +546,61 @@ export default function GlobalStyles() {
 
       .btn-reset-search:hover {
         text-decoration: underline;
+        color: #1b6fdc;
+      }
+
+      .btn-advanced-toggle {
+        background: #F0F4FF;
+        border: 1px solid #C7D9FD;
+        color: var(--primary-blue);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+        width: 35px;
+        height: 35px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+      }
+
+      .btn-advanced-toggle:hover {
+        background: #E2ECFE;
+        border-color: var(--primary-blue);
+      }
+
+      /* Advanced Filter Panel */
+      .advanced-filter-panel {
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 4px;
+        padding: 16px 20px;
+        margin: 12px 0 20px 0;
+        animation: fadeIn 0.2s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .advanced-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px 20px;
+      }
+
+      .advanced-filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .advanced-filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
       }
 
       /* Projects Table */
@@ -484,29 +621,49 @@ export default function GlobalStyles() {
 
       .pim-table th {
         height: 32px;
-        padding: 4px 12px;
+        padding: 4px 10px;
         background-color: #FFFFFF;
-        font-weight: 600;
-        color: var(--text-muted);
+        font-weight: normal;
+        color: #666666;
         border-bottom: 1px solid #DCDCDC;
         border-right: 1px solid #EBEBEB;
         user-select: none;
+        white-space: nowrap;
       }
 
       .pim-table th:last-child {
         border-right: none;
       }
 
-      .pim-table td {
-        height: 34px;
-        padding: 4px 12px;
-        border-bottom: 1px solid #EBEBEB;
-        border-right: 1px solid #EBEBEB;
-        color: var(--text-dark);
+      .sortable-th {
+        cursor: pointer;
+        white-space: nowrap !important;
+        transition: background-color 0.15s ease;
       }
 
-      .pim-table td:last-child {
-        border-right: none;
+      .sortable-th:hover {
+        background-color: #F0F4FF !important;
+        color: #0088D0 !important;
+      }
+
+      .sort-caret {
+        display: inline-block;
+        margin-left: 4px;
+        font-size: 10px;
+        color: #0088D0;
+        vertical-align: middle;
+        line-height: 0;
+        position: relative;
+        top: -1px;
+      }
+
+      .pim-table td {
+        height: 32px;
+        padding: 4px 10px;
+        border-bottom: 1px solid #EBEBEB;
+        border-right: 1px solid #EBEBEB;
+        color: #666666;
+        font-weight: 600;
       }
 
       .pim-table tr:hover {
@@ -521,7 +678,7 @@ export default function GlobalStyles() {
         width: 15px;
         height: 15px;
         cursor: pointer;
-        accent-color: var(--primary-blue);
+        accent-color: #0088D0;
       }
 
       .col-checkbox {
@@ -530,8 +687,10 @@ export default function GlobalStyles() {
       }
 
       .col-number {
-        width: 80px;
+        width: 100px;
+        min-width: 95px;
         text-align: right;
+        white-space: nowrap;
       }
 
       .col-name {
@@ -560,12 +719,13 @@ export default function GlobalStyles() {
       }
 
       .project-number-link {
-        color: var(--primary-blue);
+        color: #666666;
         text-decoration: none;
-        font-weight: 500;
+        font-weight: 600;
       }
 
       .project-number-link:hover {
+        color: #0088D0;
         text-decoration: underline;
       }
 
@@ -602,40 +762,23 @@ export default function GlobalStyles() {
       }
 
       /* Footer Section: selection info & pagination */
-      .pim-table-footer {
+      /* Selection Action Bar (matching pasted-image-1397.png) */
+      .table-selection-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 16px;
-        flex-wrap: wrap;
-        gap: 16px;
-      }
-
-      .table-footer-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 16px;
-      }
-
-      .selection-actions {
-        display: flex;
-        align-items: center;
-        gap: 16px;
+        background-color: #FAFCFE;
+        border: 1px solid #DCDCDC;
+        border-top: none;
+        padding: 8px 16px;
+        margin-bottom: 16px;
       }
 
       .selected-count-text {
         font-family: var(--font-segoe);
         font-size: 14px;
-        color: var(--primary-blue);
-        font-weight: 500;
-      }
-
-      .selected-items-info {
-        font-family: var(--font-segoe);
-        font-size: 13px;
-        color: var(--primary-blue);
-        font-weight: 500;
+        color: #0088D0;
+        font-weight: 600;
       }
 
       .btn-delete-selected {
@@ -644,15 +787,22 @@ export default function GlobalStyles() {
         color: #D9534F;
         font-family: var(--font-segoe);
         font-size: 14px;
+        font-weight: 500;
         cursor: pointer;
         padding: 0;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
       }
 
       .btn-delete-selected:hover {
         text-decoration: underline;
+      }
+
+      .pim-pagination-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 8px;
       }
 
       .delete-selected-text {
@@ -747,6 +897,149 @@ export default function GlobalStyles() {
         padding-top: 16px;
       }
 
+      /* Locale Datepicker Styles */
+      .locale-datepicker-wrapper {
+        display: inline-flex;
+        align-items: center;
+        width: 160px;
+        height: 32px;
+        border: 1px solid #CCCCCC;
+        background-color: #FFFFFF;
+        border-radius: 2px;
+        padding: 0 4px;
+        position: relative;
+        transition: border-color 0.15s ease;
+      }
+
+      .locale-datepicker-wrapper:focus-within {
+        border-color: #2E84FB;
+      }
+
+      .locale-datepicker-wrapper.field-error {
+        border-color: #D9534F !important;
+      }
+
+      .locale-datepicker-input {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent;
+        font-family: var(--font-segoe);
+        font-size: 13px;
+        color: #333333;
+        text-align: center;
+      }
+
+      .locale-datepicker-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0 4px;
+        color: #666666;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .locale-datepicker-btn:hover {
+        color: #2E84FB;
+      }
+
+      .locale-datepicker-popup {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        z-index: 1100;
+        background-color: #FFFFFF;
+        border: 1px solid #CCCCCC;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 10px;
+        width: 220px;
+      }
+
+      .datepicker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .datepicker-title {
+        font-family: var(--font-segoe);
+        font-size: 13px;
+        font-weight: 600;
+        color: #333333;
+      }
+
+      .datepicker-nav-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        color: #666666;
+        padding: 0 6px;
+      }
+
+      .datepicker-nav-btn:hover {
+        color: #2E84FB;
+      }
+
+      .datepicker-days-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        margin-bottom: 4px;
+      }
+
+      .datepicker-day-name {
+        font-family: var(--font-segoe);
+        font-size: 11px;
+        font-weight: 600;
+        color: #888888;
+      }
+
+      .datepicker-days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+
+      .datepicker-day-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        border-radius: 3px;
+        font-family: var(--font-segoe);
+        font-size: 12px;
+        color: #333333;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .datepicker-day-cell:hover:not(.empty) {
+        background-color: #EBF3FE;
+        color: #2E84FB;
+      }
+
+      .datepicker-day-cell.selected {
+        background-color: #2E84FB !important;
+        color: #FFFFFF !important;
+        font-weight: bold;
+      }
+
+      .datepicker-day-cell.empty {
+        cursor: default;
+      }
+
       /* Autocomplete dropdown */
       .suggest-dropdown-list {
         position: absolute;
@@ -827,22 +1120,95 @@ export default function GlobalStyles() {
         background-color: #F9F9F9;
       }
 
-      /* Member Suggest Dropdown Styles */
+      /* Member Suggest Tag/Chip Styles (matching pasted-image-10.png) */
+      .member-suggest-box {
+        min-height: 32px;
+        width: 100%;
+        max-width: 480px;
+        border: 1px solid #CCCCCC;
+        background-color: #FFFFFF;
+        border-radius: 2px;
+        padding: 3px 6px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        cursor: text;
+        transition: border-color 0.15s ease;
+      }
+
+      .member-suggest-box:focus-within {
+        border-color: #2E84FB;
+      }
+
+      .member-suggest-box.field-error {
+        border-color: #D9534F !important;
+      }
+
+      .member-chip {
+        background: linear-gradient(180deg, #FAFAFA 0%, #E8E8E8 100%);
+        border: 1px solid #BDBDBD;
+        border-radius: 3px;
+        padding: 2px 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-segoe);
+        font-size: 12px;
+        font-weight: 600;
+        color: #333333;
+        user-select: none;
+        line-height: 1.2;
+      }
+
+      .member-chip-remove {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 2px;
+        font-size: 12px;
+        line-height: 1;
+        color: #666666;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .member-chip-remove:hover {
+        color: #D9534F;
+      }
+
+      .member-suggest-input {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        flex: 1;
+        min-width: 100px;
+        height: 24px;
+        padding: 0 4px;
+        font-family: var(--font-segoe);
+        font-size: 13px;
+        background: transparent;
+        color: #333333;
+      }
+
       .member-suggest-dropdown {
         position: absolute;
-        top: 32px;
+        top: 100%;
         left: 0;
-        right: 0;
+        width: 100%;
+        max-width: 480px;
         max-height: 180px;
         overflow-y: auto;
         background-color: #FFFFFF;
-        border: 1px solid #DCDCDC;
-        border-radius: 2px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #7F9DB9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         z-index: 1000;
         list-style: none;
         padding: 0;
-        margin: 0;
+        margin: 2px 0 0 0;
       }
 
       .member-suggest-item {
@@ -850,22 +1216,14 @@ export default function GlobalStyles() {
         cursor: pointer;
         font-family: var(--font-segoe);
         font-size: 13px;
-        color: var(--text-dark);
+        color: #333333;
         display: flex;
-        justify-content: space-between;
+        align-items: center;
       }
 
       .member-suggest-item.active, .member-suggest-item:hover {
-        background-color: #EBF3FE;
-      }
-
-      .member-suggest-visa {
-        color: var(--primary-blue);
-        font-weight: 600;
-      }
-
-      .member-suggest-name {
-        color: var(--text-muted);
+        background-color: #3399FF;
+        color: #FFFFFF;
       }
     `}</style>
   );

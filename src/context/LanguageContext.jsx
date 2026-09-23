@@ -56,7 +56,7 @@ export const LanguageProvider = ({ children }) => {
     if (typeof value === 'string') {
       let result = value;
       Object.entries(params).forEach(([paramKey, paramVal]) => {
-        result = result.replace(new RegExp(`%\\{${paramKey}\\}`, 'g'), String(paramVal));
+        result = result.split('%{' + paramKey + '}').join(String(paramVal));
       });
       return result;
     }
