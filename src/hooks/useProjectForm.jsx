@@ -1,8 +1,33 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { useLanguage } from '../context/LanguageContext';
 import { useProjects } from '../context/ProjectContext';
 import { projectService } from '../services/projectService';
+
+export const projectSchema = z
+  .object({
+    projectNumber: z.string().trim().min(1, 'required'),
+    name: z.string().trim().min(1, 'required'),
+    customer: z.string().trim().min(1, 'required'),
+    groupId: z.string().trim().min(1, 'required'),
+    members: z.string().optional().default(''),
+    status: z.string().default('NEW'),
+    startDate: z.string().trim().min(1, 'required'),
+    endDate: z.string().optional().default(''),
+    version: z.number().default(1),
+  })
+  .refine(
+    (data) => {
+      if (!data.endDate || !data.startDate) return true;
+      return new Date(data.endDate) > new Date(data.startDate);
+    },
+    {
+      message: 'invalid_end_date',
+      path: ['endDate'],
+    }
+  );
 
 export function useProjectForm(isEdit = false) {
   const { t } = useLanguage();
@@ -31,26 +56,31 @@ export function useProjectForm(isEdit = false) {
   const groups = contextGroups && contextGroups.length ? contextGroups : projectService.getGroups();
   const employees = contextEmployees && contextEmployees.length ? contextEmployees : projectService.getEmployees();
 
-  const [formData, setFormData] = useState({
-    projectNumber: '',
-    name: '',
-    customer: '',
-    groupId: groups.length > 0 ? String(groups[0].id) : '',
-    members: '',
-    status: 'NEW',
-    startDate: '',
-    endDate: '',
-    version: 1,
-  });
   const [errorMessage, setErrorMessage] = useState('');
-  const [errorFields, setErrorFields] = useState({});
+  const [clientErrorFields, setClientErrorFields] = useState({});
+  const [serverErrorFields, setServerErrorFields] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Slice<GroupListResponse> state for infinite scroll dropdown
-  const [groupsPage, setGroupsPage] = useState(0);
-  const [hasMoreGroups, setHasMoreGroups] = useState(true);
-  const [loadingGroups, setLoadingGroups] = useState(false);
-  const groupScrollTimerRef = useRef(null);
+  const {
+    register,
+    setValue,
+    watch,
+    reset,
+  } = useForm({
+    defaultValues: {
+      projectNumber: '',
+      name: '',
+      customer: '',
+      groupId: groups.length > 0 ? String(groups[0].id) : '',
+      members: '',
+      status: 'NEW',
+      startDate: '',
+      endDate: '',
+      version: 1,
+    },
+  });
+
+  const formData = watch();
 
   // Load project in Edit mode
   useEffect(() => {
@@ -63,7 +93,7 @@ export function useProjectForm(isEdit = false) {
         ? data.members.map((m) => (typeof m === 'string' ? m : m.visa)).join(', ')
         : data.members || '';
 
-      setFormData({
+      reset({
         projectNumber: String(data.projectNumber),
         name: data.name || '',
         customer: data.customer || '',
@@ -76,11 +106,9 @@ export function useProjectForm(isEdit = false) {
       });
     };
 
-    // Try localStorage first for immediate render
     const existing = getProjectByNumber(projectNumber);
     if (existing) fillForm(existing);
 
-    // Then call API for latest data (needs projectId, search by projectNumber)
     if (process.env.NODE_ENV !== 'test') {
       const fetchFromApi = async () => {
         try {
@@ -97,85 +125,45 @@ export function useProjectForm(isEdit = false) {
             const detail = await projectService.getProjectApi(targetId);
             if (detail) fillForm(detail);
           } else if (!existing) {
-            history.replace('/error?detail=Project+not+found');
+            navigate('/error?detail=Project+not+found', { replace: true });
           }
         } catch {
           if (!existing) {
-            history.replace('/error?detail=Project+not+found');
+            navigate('/error?detail=Project+not+found', { replace: true });
           }
         }
       };
       fetchFromApi();
     } else if (!existing) {
-      history.replace('/error?detail=Project+not+found');
+      navigate('/error?detail=Project+not+found', { replace: true });
     }
-  }, [isEdit, projectNumber, getProjectByNumber, history]);
+  }, [isEdit, projectNumber, getProjectByNumber, navigate, reset]);
 
   useEffect(() => {
     if (!isEdit && groups.length > 0 && !formData.groupId) {
-      setFormData((prev) => ({ ...prev, groupId: String(groups[0].id) }));
+      setValue('groupId', String(groups[0].id));
     }
-  }, [isEdit, groups, formData.groupId]);
-
-  // Debounced scroll listener for Slice<GroupListResponse> dropdown
-  const handleGroupScroll = (e) => {
-    const { scrollTop, clientHeight, scrollHeight } = e.target;
-    if (scrollTop + clientHeight >= scrollHeight - 15) {
-      if (!hasMoreGroups || loadingGroups || process.env.NODE_ENV === 'test') return;
-      if (groupScrollTimerRef.current) clearTimeout(groupScrollTimerRef.current);
-      groupScrollTimerRef.current = setTimeout(async () => {
-        if (!hasMoreGroups || loadingGroups) return;
-        try {
-          setLoadingGroups(true);
-          const nextPage = groupsPage + 1;
-          const slice = await projectService.getGroupsApi({ page: nextPage, size: 20, sort: 'id,asc' });
-          if (slice && Array.isArray(slice.content) && slice.content.length > 0) {
-            setGroupsPage(nextPage);
-            setHasMoreGroups(!slice.last && slice.numberOfElements > 0);
-          } else {
-            setHasMoreGroups(false);
-          }
-        } catch {
-          setHasMoreGroups(false);
-        } finally {
-          setLoadingGroups(false);
-        }
-      }, 200);
-    }
-  };
+  }, [isEdit, groups, formData.groupId, setValue]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errorFields[field]) setErrorFields((prev) => ({ ...prev, [field]: false }));
+    setValue(field, value);
+    if (clientErrorFields[field]) {
+      setClientErrorFields((prev) => ({ ...prev, [field]: false }));
+    }
+    if (serverErrorFields[field]) {
+      setServerErrorFields((prev) => ({ ...prev, [field]: false }));
+    }
   };
 
-  const validate = () => {
-    const required = ['projectNumber', 'name', 'customer', 'groupId', 'status', 'startDate'];
-    const missing = required.filter((k) => !formData[k] || !String(formData[k]).trim());
-    if (missing.length) {
-      setErrorFields(missing.reduce((acc, k) => ({ ...acc, [k]: true }), {}));
-      setErrorMessage(t('projectForm.mandatoryNotice'));
-      return false;
-    }
-    if (formData.endDate && formData.startDate && new Date(formData.endDate) <= new Date(formData.startDate)) {
-      setErrorFields({ endDate: true });
-      setErrorMessage(t('projectForm.invalidEndDate'));
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-    setErrorMessage('');
-    setErrorFields({});
-    if (!validate()) return;
+  const onValid = (data) => {
     setIsSubmitting(true);
+    setErrorMessage('');
+    setClientErrorFields({});
+    setServerErrorFields({});
 
     const payload = {
-      ...formData,
-      status: (formData.status || 'NEW').toUpperCase(),
+      ...data,
+      status: (data.status || 'NEW').toUpperCase(),
     };
 
     try {
@@ -184,12 +172,12 @@ export function useProjectForm(isEdit = false) {
       } else {
         createProject(payload);
       }
-      history.push('/');
+      navigate('/');
     } catch (err) {
       setIsSubmitting(false);
 
       if (err.status >= 500) {
-        history.push(`/error?detail=${encodeURIComponent(err.message || 'Internal Server Error')}`);
+        navigate(`/error?detail=${encodeURIComponent(err.message || 'Internal Server Error')}`);
         return;
       }
 
@@ -205,7 +193,7 @@ export function useProjectForm(isEdit = false) {
       };
 
       const hit = codeMap[code] || { f: '', m: err.message || t('common.unexpectedError') };
-      if (hit.f) setErrorFields((prev) => ({ ...prev, [hit.f]: true }));
+      if (hit.f) setServerErrorFields((prev) => ({ ...prev, [hit.f]: true }));
 
       if (err.errors) {
         const serverFields = {};
@@ -213,11 +201,56 @@ export function useProjectForm(isEdit = false) {
           if (k === 'visas') serverFields.members = true;
           else serverFields[k] = true;
         });
-        setErrorFields((prev) => ({ ...prev, ...serverFields }));
+        setServerErrorFields((prev) => ({ ...prev, ...serverFields }));
       }
 
       setErrorMessage(hit.m);
     }
+  };
+
+  const handleSubmit = (e) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+
+    const currentValues = watch();
+    const result = projectSchema.safeParse(currentValues);
+
+    if (!result.success) {
+      const fieldErrors = {};
+      (result.error?.issues || []).forEach((issue) => {
+        const field = issue.path[0];
+        if (field && !fieldErrors[field]) {
+          fieldErrors[field] = true;
+        }
+      });
+      setClientErrorFields(fieldErrors);
+
+      const requiredKeys = ['projectNumber', 'name', 'customer', 'groupId', 'status', 'startDate'];
+      const hasMissingRequired = requiredKeys.some((k) => fieldErrors[k]);
+
+      if (hasMissingRequired) {
+        setErrorMessage(t('projectForm.mandatoryNotice'));
+      } else if (fieldErrors.endDate) {
+        setErrorMessage(t('projectForm.invalidEndDate'));
+      } else {
+        setErrorMessage(t('projectForm.mandatoryNotice'));
+      }
+      return;
+    }
+
+    onValid(result.data);
+  };
+
+  const errorFields = {
+    projectNumber: Boolean(clientErrorFields.projectNumber || serverErrorFields.projectNumber),
+    name: Boolean(clientErrorFields.name || serverErrorFields.name),
+    customer: Boolean(clientErrorFields.customer || serverErrorFields.customer),
+    groupId: Boolean(clientErrorFields.groupId || serverErrorFields.groupId),
+    members: Boolean(clientErrorFields.members || serverErrorFields.members),
+    status: Boolean(clientErrorFields.status || serverErrorFields.status),
+    startDate: Boolean(clientErrorFields.startDate || serverErrorFields.startDate),
+    endDate: Boolean(clientErrorFields.endDate || serverErrorFields.endDate),
   };
 
   return {
@@ -232,10 +265,10 @@ export function useProjectForm(isEdit = false) {
     isSubmitting,
     groups,
     employees,
+    register,
+    setValue,
     handleChange,
-    handleGroupScroll,
     handleSubmit,
-    validate,
   };
 }
 

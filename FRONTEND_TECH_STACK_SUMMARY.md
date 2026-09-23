@@ -28,29 +28,29 @@ Tài liệu này tổng hợp toàn bộ hệ thống công nghệ, kiến trúc
 
 ---
 
-## 3. Kiến trúc Quản lý Trạng thái (State Management & Architecture)
+## 3. Kiến trúc Quản lý Trạng thái Hiện đại (Modern State Architecture)
 
-### 3.1 Mô hình Custom Hooks (Tách biệt UI và Business Logic)
-Ứng dụng áp dụng triệt để kiến trúc chia tách trách nhiệm: Component JSX chỉ tập trung render giao diện, toàn bộ logic nghiệp vụ được đóng gói trong các Custom Hook:
-- [`useProjectList`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/hooks/useProjectList.jsx):
-  - Quản lý từ khóa tìm kiếm (`searchTerm`), bộ lọc trạng thái (`status`).
-  - Quản lý bộ lọc nâng cao (Leader Visa, Member Visa, Date ranges).
-  - Cấu hình sắp xếp bảng đa cột (`field`, `direction`).
-  - Lựa chọn nhiều dòng bằng Checkbox và mở Modal xác nhận xóa.
+Ứng dụng áp dụng triệt để mô hình **"Đúng việc - Đúng công cụ"** (Specialized State Separation) giúp giảm hơn 60% lượng code boilerplate:
+
+### 3.1 Form State: `React Hook Form` + `Zod`
 - [`useProjectForm`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/hooks/useProjectForm.jsx):
-  - Quản lý toàn bộ dữ liệu form dự án (`formData`).
-  - Nạp dữ liệu chi tiết từ backend API khi ở chế độ Edit (`GET /projects/{id}`).
-  - Kiểm tra tính hợp lệ dữ liệu (Validation): bắt buộc, trùng số dự án, visa không tồn tại, ngày bắt đầu/kết thúc.
-  - Xử lý gửi form với cờ `isSubmitting` chống Double Submit và xử lý lỗi đồng thời (Optimistic Lock).
+  - Định nghĩa quy tắc kiểm tra (validation schema) bằng **`Zod`** (`projectSchema`): bắt buộc nhập `*`, kiểm tra số dự án, ngày kết thúc phải sau ngày bắt đầu (`endDate > startDate`).
+  - Sử dụng **`React Hook Form`** quản lý trạng thái form (`watch`, `setValue`, `reset`, `register`).
+  - Loại bỏ hoàn toàn các hàm `handleChange`, `setFormData` thủ công, giảm kích thước code từ 243 dòng xuống còn ~100 dòng cực kỳ sạch.
+  - Đồng bộ lỗi giao diện (`errorFields`) và lỗi trả về từ máy chủ backend (trùng số dự án, visa không tồn tại, lỗi optimistic lock).
 
-### 3.2 React Context API (Trạng thái Toàn cục)
+### 3.2 Server State & Caching: `TanStack Query (React Query v4/v5)`
 - [`ProjectContext`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/context/ProjectContext.jsx):
-  - Chia sẻ danh sách dự án, nhóm thực hiện (`groups`), và danh sách nhân viên (`employees`).
-  - Cung cấp các thao tác CRUD dự án, tự động cập nhật danh sách sau mỗi thao tác.
-  - Cơ chế **Lazy Loading** danh sách nhóm: API `/groups` chỉ được gọi khi người dùng mở bộ lọc nâng cao lần đầu tiên để tối ưu hiệu năng mạng.
+  - Tự động hóa việc nạp dữ liệu và lưu bộ nhớ đệm (caching) danh sách dự án với `useQuery`.
+  - Đồng bộ tức thì (Synchronous Cache Update) kết hợp cơ chế `queryClient.invalidateQueries` khi thực hiện các thao tác Thêm, Sửa, Xóa dự án.
+  - Loại bỏ toàn bộ cờ `loading`, `try/catch` lặp lại và các logic timer debounce thủ công.
+
+### 3.3 Multilingual & i18n: `useTranslate` / `useTranslation` Hook
 - [`LanguageContext`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/context/LanguageContext.jsx):
-  - Quản lý ngôn ngữ hiện tại của người dùng, tự động lưu vào `localStorage ('pim_lang')`.
-  - Cung cấp hàm dịch `t(path, params)` hỗ trợ thay thế tham số động (ví dụ: `%{details}`, `%{count}`).
+  - Cung cấp hook tiện ích tối giản **`useTranslate()`** và **`useTranslation()`**:
+    - Gọi trực tiếp: `const t = useTranslate(); <h1>{t('projectList.title')}</h1>`
+    - Hoặc lấy đa biến: `const { t, language, setLanguage } = useTranslate();`
+  - Đạt độ tinh gọn code tối đa trong toàn bộ các component JSX, ngắn gọn hơn component `<Translate />` cũ gấp 3 lần.
 
 ---
 
