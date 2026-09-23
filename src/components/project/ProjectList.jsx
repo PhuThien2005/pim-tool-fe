@@ -4,35 +4,32 @@ import Pagination from '../common/Pagination';
 import ConfirmModal from '../common/ConfirmModal';
 import { useProjectList } from '../../hooks/useProjectList';
 
+const COLS = [
+  ['col-checkbox'],
+  ['col-number', 'number', 'projectNumber'],
+  ['col-name', 'name', 'name'],
+  ['col-status', 'status', 'status'],
+  ['col-customer', 'customer', 'customer'],
+  ['col-date', 'startDate', 'startDate'],
+  ['col-delete', 'delete'],
+];
+
+const ADV_FIELDS = [
+  { label: 'leaderPlaceholder', key: 'leaderVisa', type: 'text', placeholder: 'e.g. DTH', list: 'leader-visas-list' },
+  { label: 'memberPlaceholder', key: 'memberVisa', type: 'text', placeholder: 'e.g. BHU' },
+  { label: 'startDateFrom', key: 'startDateFrom', type: 'date' },
+  { label: 'startDateTo', key: 'startDateTo', type: 'date' },
+  { label: 'endDateFrom', key: 'endDateFrom', type: 'date' },
+  { label: 'endDateTo', key: 'endDateTo', type: 'date' },
+];
+
 export default function ProjectList() {
   const {
-    t,
-    projects,
-    groups,
-    totalPages,
-    currentPage,
-    setCurrentPage,
-    loading,
-    searchInput,
-    setSearchInput,
-    statusInput,
-    setStatusInput,
-    showAdvanced,
-    setShowAdvanced,
-    advInputs,
-    handleAdvChange,
-    selectedIds,
-    modalConfig,
-    setModalConfig,
-    actionError,
-    handleSearch,
-    handleReset,
-    toggleSelectRow,
-    openDelete,
-    confirmDelete,
-    toggleSort,
-    renderSortIcon,
-    fmtDate,
+    t, projects, groups, totalPages, currentPage, setCurrentPage, loading,
+    searchInput, setSearchInput, statusInput, setStatusInput, showAdvanced, setShowAdvanced,
+    advInputs, handleAdvChange, selectedIds, modalConfig, setModalConfig, actionError,
+    handleSearch, handleReset, toggleSelectRow, openDelete, confirmDelete,
+    toggleSort, renderSortIcon, fmtDate,
   } = useProjectList();
 
   return (
@@ -47,7 +44,6 @@ export default function ProjectList() {
         </div>
       )}
 
-      {/* Main Search Bar */}
       <form className="pim-search-bar" onSubmit={handleSearch}>
         <input
           type="text"
@@ -71,111 +67,56 @@ export default function ProjectList() {
         <button
           type="button"
           className="btn-advanced-toggle"
-          onClick={() => setShowAdvanced((prev) => !prev)}
+          onClick={() => setShowAdvanced((p) => !p)}
           title={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')}
+          aria-label={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')}
         >
           <i className="fa fa-filter" />
         </button>
       </form>
 
-      {/* Collapsible Advanced Filter Section */}
       {showAdvanced && (
         <div className="advanced-filter-panel">
           <div className="advanced-filter-grid">
-            <div className="advanced-filter-item">
-              <label className="advanced-filter-label">{t('projectList.leaderPlaceholder')}</label>
-              <input
-                type="text"
-                className="pim-input"
-                placeholder="e.g. DTH"
-                value={advInputs.leaderVisa}
-                onChange={(e) => handleAdvChange('leaderVisa', e.target.value)}
-                list="leader-visas-list"
-              />
-              <datalist id="leader-visas-list">
-                {(groups || []).map((g) => {
-                  const visa = g.groupLeader?.visa || g.leaderVisa;
-                  return visa ? <option key={g.id} value={visa} /> : null;
-                })}
-              </datalist>
-            </div>
-            <div className="advanced-filter-item">
-              <label className="advanced-filter-label">{t('projectList.memberPlaceholder')}</label>
-              <input
-                type="text"
-                className="pim-input"
-                placeholder="e.g. BHU"
-                value={advInputs.memberVisa}
-                onChange={(e) => handleAdvChange('memberVisa', e.target.value)}
-              />
-            </div>
-            <div className="advanced-filter-item">
-              <label className="advanced-filter-label">{t('projectList.startDateFrom')}</label>
-              <input
-                type="date"
-                className="pim-input align-center"
-                value={advInputs.startDateFrom}
-                onChange={(e) => handleAdvChange('startDateFrom', e.target.value)}
-              />
-            </div>
-            <div className="advanced-filter-item">
-              <label className="advanced-filter-label">{t('projectList.startDateTo')}</label>
-              <input
-                type="date"
-                className="pim-input align-center"
-                value={advInputs.startDateTo}
-                onChange={(e) => handleAdvChange('startDateTo', e.target.value)}
-              />
-            </div>
-            <div className="advanced-filter-item">
-              <label className="advanced-filter-label">{t('projectList.endDateFrom')}</label>
-              <input
-                type="date"
-                className="pim-input align-center"
-                value={advInputs.endDateFrom}
-                onChange={(e) => handleAdvChange('endDateFrom', e.target.value)}
-              />
-            </div>
-            <div className="advanced-filter-item">
-              <label className="advanced-filter-label">{t('projectList.endDateTo')}</label>
-              <input
-                type="date"
-                className="pim-input align-center"
-                value={advInputs.endDateTo}
-                onChange={(e) => handleAdvChange('endDateTo', e.target.value)}
-              />
-            </div>
+            {ADV_FIELDS.map(({ label, key, type, placeholder, list }) => (
+              <div key={key} className="advanced-filter-item">
+                <label className="advanced-filter-label">{t(`projectList.${label}`)}</label>
+                <input
+                  type={type}
+                  className={`pim-input ${type === 'date' ? 'align-center' : ''}`}
+                  placeholder={placeholder}
+                  value={advInputs[key]}
+                  onChange={(e) => handleAdvChange(key, e.target.value)}
+                  list={list}
+                />
+                {list && (
+                  <datalist id={list}>
+                    {(groups || []).map((g) => {
+                      const visa = g.groupLeader?.visa || g.leaderVisa;
+                      return visa ? <option key={g.id} value={visa} /> : null;
+                    })}
+                  </datalist>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Projects Table with Sortable Headers */}
       <div className="pim-table-wrapper">
         <table className="pim-table">
           <thead>
             <tr>
-              <th className="col-checkbox"></th>
-              <th className="col-number sortable-th" onClick={() => toggleSort('projectNumber')}>
-                {t('projectList.table.number')}
-                {renderSortIcon('projectNumber')}
-              </th>
-              <th className="col-name sortable-th" onClick={() => toggleSort('name')}>
-                {t('projectList.table.name')}
-                {renderSortIcon('name')}
-              </th>
-              <th className="col-status sortable-th" onClick={() => toggleSort('status')}>
-                {t('projectList.table.status')}
-                {renderSortIcon('status')}
-              </th>
-              <th className="col-customer sortable-th" onClick={() => toggleSort('customer')}>
-                {t('projectList.table.customer')}
-                {renderSortIcon('customer')}
-              </th>
-              <th className="col-date sortable-th" onClick={() => toggleSort('startDate')}>
-                {t('projectList.table.startDate')}
-                {renderSortIcon('startDate')}
-              </th>
-              <th className="col-delete">{t('projectList.table.delete')}</th>
+              {COLS.map(([cls, key, sortField]) => (
+                <th
+                  key={cls}
+                  className={`${cls} ${sortField ? 'sortable-th' : ''}`}
+                  onClick={sortField ? () => toggleSort(sortField) : undefined}
+                >
+                  {key ? t(`projectList.table.${key}`) : null}
+                  {sortField && renderSortIcon(sortField)}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -229,7 +170,6 @@ export default function ProjectList() {
         </table>
       </div>
 
-      {/* Selection Action Bar directly underneath table matching pasted-image-1397.png */}
       {selectedIds.length > 0 && (
         <div className="table-selection-bar">
           <span className="selected-count-text">
@@ -251,9 +191,8 @@ export default function ProjectList() {
         </div>
       )}
 
-      {/* Pagination aligned to right */}
       <div className="pim-pagination-container">
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(p) => setCurrentPage(p)} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
       </div>
 
       <ConfirmModal

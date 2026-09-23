@@ -3,34 +3,22 @@ import MemberSuggest from './MemberSuggest';
 import LocaleDatePicker from '../common/LocaleDatePicker';
 import { useProjectForm } from '../../hooks/useProjectForm';
 
-function FormRow({ label, required, htmlFor, children, width }) {
-  return (
-    <div className="form-row-custom">
-      <label className="form-label-col" htmlFor={htmlFor}>
-        {label}
-        {required && <span className="required-asterisk">*</span>}
-      </label>
-      <div className="form-input-col" style={width ? { width, maxWidth: '100%' } : undefined}>
-        {children}
-      </div>
+const FormRow = ({ label, required, htmlFor, children, width }) => (
+  <div className="form-row-custom">
+    <label className="form-label-col" htmlFor={htmlFor}>
+      {label}
+      {required && <span className="required-asterisk">*</span>}
+    </label>
+    <div className="form-input-col" style={width ? { width, maxWidth: '100%' } : undefined}>
+      {children}
     </div>
-  );
-}
+  </div>
+);
 
 export default function ProjectForm({ isEdit = false }) {
   const {
-    t,
-    navigate,
-    formData,
-    errorMessage,
-    setErrorMessage,
-    errorFields,
-    isSubmitting,
-    groups,
-    employees,
-    handleChange,
-    handleGroupScroll,
-    handleSubmit,
+    t, navigate, formData, errorMessage, setErrorMessage, errorFields,
+    isSubmitting, groups, employees, handleChange, handleGroupScroll, handleSubmit,
   } = useProjectForm(isEdit);
 
   return (
@@ -41,14 +29,7 @@ export default function ProjectForm({ isEdit = false }) {
       {errorMessage && (
         <div className="error-banner" role="alert">
           <span>{errorMessage}</span>
-          <button
-            type="button"
-            className="error-banner-close"
-            onClick={() => setErrorMessage('')}
-            title="Close"
-          >
-            ✕
-          </button>
+          <button type="button" className="error-banner-close" onClick={() => setErrorMessage('')} title="Close">✕</button>
         </div>
       )}
 
@@ -98,10 +79,9 @@ export default function ProjectForm({ isEdit = false }) {
             onScroll={handleGroupScroll}
           >
             <option value="">{t('projectForm.selectGroup')}</option>
-            {groups.map((g) => {
-              const leaderVisa = g.groupLeader?.visa || g.leaderVisa || g.name;
-              return <option key={g.id} value={g.id}>{leaderVisa}</option>;
-            })}
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>{g.groupLeader?.visa || g.leaderVisa || g.name}</option>
+            ))}
           </select>
         </FormRow>
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useLanguage } from '../context/LanguageContext';
+import { useTranslate } from '../context/LanguageContext';
 import { useProjects } from '../context/ProjectContext';
 import { projectService } from '../services/projectService';
 
@@ -19,59 +19,31 @@ export const projectSchema = z
     version: z.number().default(1),
   })
   .refine(
-    (data) => {
-      if (!data.endDate || !data.startDate) return true;
-      return new Date(data.endDate) > new Date(data.startDate);
-    },
-    {
-      message: 'invalid_end_date',
-      path: ['endDate'],
-    }
+    (d) => !d.endDate || !d.startDate || new Date(d.endDate) > new Date(d.startDate),
+    { message: 'invalid_end_date', path: ['endDate'] }
   );
 
 export function useProjectForm(isEdit = false) {
-  const { t } = useLanguage();
+  const t = useTranslate();
   const navigate = useNavigate();
-  const history = useMemo(
-    () => ({
-      push: (path) => navigate(path),
-      replace: (path) => navigate(path, { replace: true }),
-    }),
-    [navigate]
-  );
+  const history = useMemo(() => ({ push: navigate, replace: (p) => navigate(p, { replace: true }) }), [navigate]);
   const { projectNumber } = useParams();
-  const {
-    groups: contextGroups,
-    employees: contextEmployees,
-    createProject,
-    updateProject,
-    getProjectByNumber,
-    loadGroups,
-  } = useProjects();
+  const { groups: ctxGroups, employees: ctxEmps, createProject, updateProject, getProjectByNumber, loadGroups } = useProjects();
 
-  useEffect(() => {
-    loadGroups();
-  }, [loadGroups]);
-
-  const groups = contextGroups && contextGroups.length ? contextGroups : projectService.getGroups();
-  const employees = contextEmployees && contextEmployees.length ? contextEmployees : projectService.getEmployees();
+  useEffect(() => { loadGroups(); }, [loadGroups]);
+  const groups = ctxGroups?.length ? ctxGroups : projectService.getGroups();
+  const employees = ctxEmps?.length ? ctxEmps : projectService.getEmployees();
 
   const [errorMessage, setErrorMessage] = useState('');
-  const [clientErrorFields, setClientErrorFields] = useState({});
-  const [serverErrorFields, setServerErrorFields] = useState({});
+  const [errorFields, setErrorFields] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    register,
-    setValue,
-    watch,
-    reset,
-  } = useForm({
+  const { register, setValue, watch, reset } = useForm({
     defaultValues: {
       projectNumber: '',
       name: '',
       customer: '',
-      groupId: groups.length > 0 ? String(groups[0].id) : '',
+      groupId: groups[0]?.id ? String(groups[0].id) : '',
       members: '',
       status: 'NEW',
       startDate: '',
@@ -82,175 +54,63 @@ export function useProjectForm(isEdit = false) {
 
   const formData = watch();
 
-  // Load project in Edit mode
   useEffect(() => {
     if (!isEdit || !projectNumber) return;
-
-    const fillForm = (data) => {
-      const members = Array.isArray(data.employees) && data.employees.length
-        ? data.employees.map((e) => (typeof e === 'string' ? e : e.visa)).join(', ')
-        : Array.isArray(data.members)
-        ? data.members.map((m) => (typeof m === 'string' ? m : m.visa)).join(', ')
-        : data.members || '';
-
-      reset({
-        projectNumber: String(data.projectNumber),
-        name: data.name || '',
-        customer: data.customer || '',
-        groupId: String(data.group?.id || data.groupId || ''),
-        members,
-        status: (data.status || 'NEW').toUpperCase(),
-        startDate: data.startDate || '',
-        endDate: data.endDate || '',
-        version: data.version !== undefined ? data.version : 1,
-      });
-    };
-
-    const existing = getProjectByNumber(projectNumber);
-    if (existing) fillForm(existing);
-
-    if (process.env.NODE_ENV !== 'test') {
-      const fetchFromApi = async () => {
-        try {
-          let targetId = existing?.id;
-          if (!targetId) {
-            const searchRes = await projectService.searchProjectsApi(
-              { searchTerm: String(projectNumber) },
-              { page: 0, size: 5, sort: 'projectNumber,asc' }
-            );
-            const match = searchRes?.content?.find((p) => p.projectNumber === +projectNumber || p.id === +projectNumber);
-            targetId = match?.id;
-          }
-          if (targetId) {
-            const detail = await projectService.getProjectApi(targetId);
-            if (detail) fillForm(detail);
-          } else if (!existing) {
-            navigate('/error?detail=Project+not+found', { replace: true });
-          }
-        } catch {
-          if (!existing) {
-            navigate('/error?detail=Project+not+found', { replace: true });
-          }
-        }
-      };
-      fetchFromApi();
-    } else if (!existing) {
-      navigate('/error?detail=Project+not+found', { replace: true });
-    }
-  }, [isEdit, projectNumber, getProjectByNumber, navigate, reset]);
+    const proj = getProjectByNumber(projectNumber);
+    if (!proj) return navigate('/error?detail=Project+not+found', { replace: true });
+    const members = (proj.employees || proj.members || []).map((m) => (typeof m === 'string' ? m : m.visa)).join(', ') || proj.members || '';
+    reset({
+      projectNumber: String(proj.projectNumber),
+      name: proj.name || '',
+      customer: proj.customer || '',
+      groupId: String(proj.group?.id || proj.groupId || ''),
+      members,
+      status: (proj.status || 'NEW').toUpperCase(),
+      startDate: proj.startDate || '',
+      endDate: proj.endDate || '',
+      version: proj.version ?? 1,
+    });
+  }, [isEdit, projectNumber, getProjectByNumber, reset, navigate]);
 
   useEffect(() => {
-    if (!isEdit && groups.length > 0 && !formData.groupId) {
-      setValue('groupId', String(groups[0].id));
-    }
+    if (!isEdit && groups.length && !formData.groupId) setValue('groupId', String(groups[0].id));
   }, [isEdit, groups, formData.groupId, setValue]);
 
-  const handleChange = (field, value) => {
-    setValue(field, value);
-    if (clientErrorFields[field]) {
-      setClientErrorFields((prev) => ({ ...prev, [field]: false }));
-    }
-    if (serverErrorFields[field]) {
-      setServerErrorFields((prev) => ({ ...prev, [field]: false }));
-    }
-  };
-
-  const onValid = (data) => {
-    setIsSubmitting(true);
-    setErrorMessage('');
-    setClientErrorFields({});
-    setServerErrorFields({});
-
-    const payload = {
-      ...data,
-      status: (data.status || 'NEW').toUpperCase(),
-    };
-
-    try {
-      if (isEdit) {
-        updateProject(projectNumber, payload);
-      } else {
-        createProject(payload);
-      }
-      navigate('/');
-    } catch (err) {
-      setIsSubmitting(false);
-
-      if (err.status >= 500) {
-        navigate(`/error?detail=${encodeURIComponent(err.message || 'Internal Server Error')}`);
-        return;
-      }
-
-      const code = err.errorCode || err.code;
-      const codeMap = {
-        DUPLICATE_NUMBER: { f: 'projectNumber', m: t('projectForm.duplicateNumber') },
-        PROJECT_NUMBER_ALREADY_EXISTS: { f: 'projectNumber', m: t('projectForm.duplicateNumber') },
-        INVALID_VISAS: { f: 'members', m: err.message },
-        VISA_NOT_FOUND: { f: 'members', m: err.message },
-        INVALID_END_DATE: { f: 'endDate', m: t('projectForm.invalidEndDate') },
-        OPTIMISTIC_LOCK_ERROR: { f: '', m: err.message || 'The project has been modified by another user. Please refresh and try again.' },
-        VALIDATION_ERROR: { f: '', m: t('projectForm.mandatoryNotice') },
-      };
-
-      const hit = codeMap[code] || { f: '', m: err.message || t('common.unexpectedError') };
-      if (hit.f) setServerErrorFields((prev) => ({ ...prev, [hit.f]: true }));
-
-      if (err.errors) {
-        const serverFields = {};
-        Object.keys(err.errors).forEach((k) => {
-          if (k === 'visas') serverFields.members = true;
-          else serverFields[k] = true;
-        });
-        setServerErrorFields((prev) => ({ ...prev, ...serverFields }));
-      }
-
-      setErrorMessage(hit.m);
-    }
+  const handleChange = (field, val) => {
+    setValue(field, val);
+    if (errorFields[field]) setErrorFields((prev) => ({ ...prev, [field]: false }));
   };
 
   const handleSubmit = (e) => {
-    if (e && typeof e.preventDefault === 'function') {
-      e.preventDefault();
-    }
-
-    const currentValues = watch();
-    const result = projectSchema.safeParse(currentValues);
+    if (e && e.preventDefault) e.preventDefault();
+    const result = projectSchema.safeParse(watch());
 
     if (!result.success) {
-      const fieldErrors = {};
-      (result.error?.issues || []).forEach((issue) => {
-        const field = issue.path[0];
-        if (field && !fieldErrors[field]) {
-          fieldErrors[field] = true;
-        }
-      });
-      setClientErrorFields(fieldErrors);
-
-      const requiredKeys = ['projectNumber', 'name', 'customer', 'groupId', 'status', 'startDate'];
-      const hasMissingRequired = requiredKeys.some((k) => fieldErrors[k]);
-
-      if (hasMissingRequired) {
-        setErrorMessage(t('projectForm.mandatoryNotice'));
-      } else if (fieldErrors.endDate) {
-        setErrorMessage(t('projectForm.invalidEndDate'));
-      } else {
-        setErrorMessage(t('projectForm.mandatoryNotice'));
-      }
-      return;
+      const errMap = {};
+      result.error.issues.forEach((i) => { if (i.path[0]) errMap[i.path[0]] = true; });
+      setErrorFields(errMap);
+      return setErrorMessage(errMap.endDate ? t('projectForm.invalidEndDate') : t('projectForm.mandatoryNotice'));
     }
 
-    onValid(result.data);
-  };
+    setIsSubmitting(true);
+    setErrorMessage('');
+    setErrorFields({});
 
-  const errorFields = {
-    projectNumber: Boolean(clientErrorFields.projectNumber || serverErrorFields.projectNumber),
-    name: Boolean(clientErrorFields.name || serverErrorFields.name),
-    customer: Boolean(clientErrorFields.customer || serverErrorFields.customer),
-    groupId: Boolean(clientErrorFields.groupId || serverErrorFields.groupId),
-    members: Boolean(clientErrorFields.members || serverErrorFields.members),
-    status: Boolean(clientErrorFields.status || serverErrorFields.status),
-    startDate: Boolean(clientErrorFields.startDate || serverErrorFields.startDate),
-    endDate: Boolean(clientErrorFields.endDate || serverErrorFields.endDate),
+    try {
+      const payload = { ...result.data, status: (result.data.status || 'NEW').toUpperCase() };
+      isEdit ? updateProject(projectNumber, payload) : createProject(payload);
+      navigate('/');
+    } catch (err) {
+      setIsSubmitting(false);
+      if (err.status >= 500) return navigate(`/error?detail=${encodeURIComponent(err.message || 'Error')}`);
+      const code = err.errorCode || err.code;
+      const isDup = code === 'DUPLICATE_NUMBER' || code === 'PROJECT_NUMBER_ALREADY_EXISTS';
+      const isVisa = code === 'INVALID_VISAS' || code === 'VISA_NOT_FOUND';
+      const isDate = code === 'INVALID_END_DATE';
+      const field = isDup ? 'projectNumber' : isVisa ? 'members' : isDate ? 'endDate' : '';
+      if (field) setErrorFields((prev) => ({ ...prev, [field]: true }));
+      setErrorMessage(isDup ? t('projectForm.duplicateNumber') : isDate ? t('projectForm.invalidEndDate') : err.message || t('common.unexpectedError'));
+    }
   };
 
   return {

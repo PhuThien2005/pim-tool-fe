@@ -1,167 +1,70 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useQuery, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { projectService } from '../services/projectService';
 
 const ProjectContext = createContext();
 
 const initialCriteria = {
-  searchTerm: '',
-  status: '',
-  leaderVisa: '',
-  memberVisa: '',
-  startDateFrom: '',
-  startDateTo: '',
-  endDateFrom: '',
-  endDateTo: '',
+  searchTerm: '', status: '', leaderVisa: '', memberVisa: '',
+  startDateFrom: '', startDateTo: '', endDateFrom: '', endDateTo: '',
 };
 
 export const defaultQueryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-  },
+  defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 });
 
 function ProjectProviderInner({ children }) {
   const queryClient = useQueryClient();
   const [searchCriteria, setSearchCriteriaState] = useState(initialCriteria);
   const [sortConfig, setSortConfig] = useState({ field: 'projectNumber', direction: 'asc' });
-  const [currentPage, setCurrentPageState] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [groups, setGroups] = useState(() => projectService.getGroups());
   const [employees] = useState(() => projectService.getEmployees());
 
-  const getLatestProjects = (criteria = searchCriteria, page = currentPage, sort = sortConfig) => {
-    const pageIndex = Math.max(0, page - 1);
-    const sortParam = `${sort.field},${sort.direction}`;
-    return projectService.searchProjects(criteria, {
-      page: pageIndex,
-      size: 5,
-      sort: sortParam,
-    });
-  };
+  const getProjects = (c = searchCriteria, p = currentPage, s = sortConfig) =>
+    projectService.searchProjects(c, { page: Math.max(0, p - 1), size: 5, sort: `${s.field},${s.direction}` });
 
-  const [localPageResult, setLocalPageResult] = useState(() => getLatestProjects());
+  const [localResult, setLocalResult] = useState(() => getProjects());
 
-  // TanStack Query for searching projects
-  const { data: queryPageResult, isLoading: loading } = useQuery({
+  const { data: queryResult, isLoading: loading } = useQuery({
     queryKey: ['projects', searchCriteria, currentPage, sortConfig],
     queryFn: async () => {
       const pageIndex = Math.max(0, currentPage - 1);
-      const sortParam = `${sortConfig.field},${sortConfig.direction}`;
-      const localRes = projectService.searchProjects(searchCriteria, {
-        page: pageIndex,
-        size: 5,
-        sort: sortParam,
-      });
+      const sort = `${sortConfig.field},${sortConfig.direction}`;
+      const local = projectService.searchProjects(searchCriteria, { page: pageIndex, size: 5, sort });
       if (process.env.NODE_ENV !== 'test') {
         try {
-          const apiRes = await projectService.searchProjectsApi(searchCriteria, {
-            page: pageIndex,
-            size: 5,
-            sort: sortParam,
-          });
-          if (apiRes && Array.isArray(apiRes.content)) return apiRes;
-        } catch {
-          // fallback to local data
-        }
+          const api = await projectService.searchProjectsApi(searchCriteria, { page: pageIndex, size: 5, sort });
+          if (api?.content?.length) return api;
+        } catch {}
       }
-      return localRes;
+      return local;
     },
-    onSuccess: (data) => {
-      setLocalPageResult(data);
-    },
+    onSuccess: (data) => setLocalResult(data),
   });
 
-  const pageResult = queryPageResult || localPageResult;
+  const syncCache = (nextCriteria = searchCriteria, nextPage = currentPage, nextSort = sortConfig) => {
+    const nextData = getProjects(nextCriteria, nextPage, nextSort);
+    setLocalResult(nextData);
+    queryClient.setQueryData(['projects', nextCriteria, nextPage, nextSort], nextData);
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
+  };
 
-  const groupsLoadedRef = useRef(false);
   const loadGroups = useCallback(async () => {
-    if (groupsLoadedRef.current || process.env.NODE_ENV === 'test') return;
-    groupsLoadedRef.current = true;
+    if (process.env.NODE_ENV === 'test') return;
     try {
       const slice = await projectService.getGroupsApi({ page: 0, size: 20, sort: 'id,asc' });
-      if (slice && Array.isArray(slice.content) && slice.content.length) {
-        setGroups(slice.content);
-      }
+      if (slice?.content?.length) setGroups(slice.content);
     } catch {}
   }, []);
 
-  const setSearchCriteria = (newCriteria) => {
-    const updated = { ...searchCriteria, ...newCriteria };
-    setSearchCriteriaState(updated);
-    setCurrentPageState(1);
-    const nextData = getLatestProjects(updated, 1, sortConfig);
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', updated, 1, sortConfig], nextData);
+  const mutate = (action) => {
+    const res = action();
+    syncCache();
+    return res;
   };
 
-  const resetSearch = () => {
-    setSearchCriteriaState(initialCriteria);
-    setCurrentPageState(1);
-    const nextData = getLatestProjects(initialCriteria, 1, sortConfig);
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', initialCriteria, 1, sortConfig], nextData);
-  };
-
-  const setCurrentPage = (page) => {
-    setCurrentPageState(page);
-    const nextData = getLatestProjects(searchCriteria, page, sortConfig);
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', searchCriteria, page, sortConfig], nextData);
-  };
-
-  const toggleSort = (field) => {
-    const nextDir = sortConfig.field === field && sortConfig.direction === 'asc' ? 'desc' : 'asc';
-    const nextSort = { field, direction: nextDir };
-    setSortConfig(nextSort);
-    const nextData = getLatestProjects(searchCriteria, currentPage, nextSort);
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', searchCriteria, currentPage, nextSort], nextData);
-  };
-
-  const createProject = (data) => {
-    const created = projectService.createProject(data);
-    const nextData = getLatestProjects();
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', searchCriteria, currentPage, sortConfig], nextData);
-    queryClient.invalidateQueries({ queryKey: ['projects'] });
-    return created;
-  };
-
-  const updateProject = (projectNumber, data) => {
-    const updated = projectService.updateProject(projectNumber, data);
-    const nextData = getLatestProjects();
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', searchCriteria, currentPage, sortConfig], nextData);
-    queryClient.invalidateQueries({ queryKey: ['projects'] });
-    return updated;
-  };
-
-  const deleteProject = (idOrNumber) => {
-    projectService.deleteProject(idOrNumber);
-    const nextData = getLatestProjects();
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', searchCriteria, currentPage, sortConfig], nextData);
-    queryClient.invalidateQueries({ queryKey: ['projects'] });
-  };
-
-  const deleteProjects = (idsOrNumbers) => {
-    projectService.deleteProjects(idsOrNumbers);
-    const nextData = getLatestProjects();
-    setLocalPageResult(nextData);
-    queryClient.setQueryData(['projects', searchCriteria, currentPage, sortConfig], nextData);
-    queryClient.invalidateQueries({ queryKey: ['projects'] });
-  };
-
-  const getProjectByNumber = (number) => {
-    const fromPage = (pageResult.content || []).find(
-      (p) => p.projectNumber === +number || p.id === +number
-    );
-    if (fromPage) return fromPage;
-    return projectService.getProjectByNumber(number) || projectService.getProjectById(number);
-  };
+  const pageResult = queryResult || localResult;
 
   return (
     <ProjectContext.Provider
@@ -169,22 +72,21 @@ function ProjectProviderInner({ children }) {
         projects: pageResult.content || [],
         totalPages: pageResult.totalPages || 1,
         totalElements: pageResult.totalElements || 0,
-        loading,
-        groups,
-        loadGroups,
-        employees,
-        searchCriteria,
-        setSearchCriteria,
-        resetSearch,
-        sortConfig,
-        toggleSort,
-        currentPage,
-        setCurrentPage,
-        createProject,
-        updateProject,
-        deleteProject,
-        deleteProjects,
-        getProjectByNumber,
+        loading, groups, loadGroups, employees,
+        searchCriteria, sortConfig, currentPage,
+        setSearchCriteria: (c) => { const next = { ...searchCriteria, ...c }; setSearchCriteriaState(next); setCurrentPage(1); syncCache(next, 1, sortConfig); },
+        resetSearch: () => { setSearchCriteriaState(initialCriteria); setCurrentPage(1); syncCache(initialCriteria, 1, sortConfig); },
+        setCurrentPage: (p) => { setCurrentPage(p); syncCache(searchCriteria, p, sortConfig); },
+        toggleSort: (field) => {
+          const next = { field, direction: sortConfig.field === field && sortConfig.direction === 'asc' ? 'desc' : 'asc' };
+          setSortConfig(next);
+          syncCache(searchCriteria, currentPage, next);
+        },
+        createProject: (data) => mutate(() => projectService.createProject(data)),
+        updateProject: (num, data) => mutate(() => projectService.updateProject(num, data)),
+        deleteProject: (id) => mutate(() => projectService.deleteProject(id)),
+        deleteProjects: (ids) => mutate(() => projectService.deleteProjects(ids)),
+        getProjectByNumber: (num) => (pageResult.content || []).find((p) => p.projectNumber === +num || p.id === +num) || projectService.getProjectByNumber(num) || projectService.getProjectById(num),
         refreshProjects: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
       }}
     >
@@ -193,13 +95,11 @@ function ProjectProviderInner({ children }) {
   );
 }
 
-export const ProjectProvider = ({ children }) => {
-  return (
-    <QueryClientProvider client={defaultQueryClient}>
-      <ProjectProviderInner>{children}</ProjectProviderInner>
-    </QueryClientProvider>
-  );
-};
+export const ProjectProvider = ({ children }) => (
+  <QueryClientProvider client={defaultQueryClient}>
+    <ProjectProviderInner>{children}</ProjectProviderInner>
+  </QueryClientProvider>
+);
 
 export const useProjects = () => {
   const context = useContext(ProjectContext);
