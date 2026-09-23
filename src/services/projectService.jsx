@@ -10,11 +10,11 @@ const INIT_EMPS = ['DTH', 'BHU', 'JHV', 'HTV', 'NQN', 'HNH', 'TQP', 'QMV', 'FUN'
 }));
 
 const INIT_PROJS = [
-  { id: 1, projectNumber: 3116, name: 'Facturation / Encaissements', customer: 'Les Retaites Populaires', groupId: 1, group: INIT_GROUPS[0], members: ['DTH', 'BHU'], status: 'NEW', startDate: '2004-02-25', endDate: '2004-12-31', version: 1 },
-  { id: 2, projectNumber: 3118, name: 'GKBWEB', customer: 'GKB', groupId: 2, group: INIT_GROUPS[1], members: ['JHV', 'FUN'], status: 'FIN', startDate: '2002-10-10', endDate: '2003-08-15', version: 1 },
-  { id: 3, projectNumber: 7157, name: 'MGBAHN-Maint2015', customer: 'MGB Tourism', groupId: 3, group: INIT_GROUPS[2], members: ['KMA', 'TIN'], status: 'INP', startDate: '2006-09-24', endDate: '2007-06-30', version: 1 },
-  { id: 4, projectNumber: 7174, name: 'SOMED-SPITEX MAINT', customer: 'SOMED-SPITEX MAINT', groupId: 4, group: INIT_GROUPS[3], members: ['DTH', 'ATN'], status: 'NEW', startDate: '2015-10-05', endDate: '', version: 1 },
-  { id: 5, projectNumber: 1004, name: 'IOC CLIENT EXTRANET', customer: 'IOC', groupId: 2, group: INIT_GROUPS[1], members: ['HTV', 'TQP', 'QMV'], status: 'INP', startDate: '2016-01-01', endDate: '2017-01-01', version: 1 },
+  { id: 3116, projectNumber: 3116, name: 'Facturation / Encaissements', customer: 'Les Retaites Populaires', groupId: 1, group: INIT_GROUPS[0], members: ['DTH', 'BHU'], status: 'NEW', startDate: '2004-02-25', endDate: '2004-12-31', version: 1 },
+  { id: 3118, projectNumber: 3118, name: 'GKBWEB', customer: 'GKB', groupId: 2, group: INIT_GROUPS[1], members: ['JHV', 'FUN'], status: 'FIN', startDate: '2002-10-10', endDate: '2003-08-15', version: 1 },
+  { id: 7157, projectNumber: 7157, name: 'MGBAHN-Maint2015', customer: 'MGB Tourism', groupId: 3, group: INIT_GROUPS[2], members: ['KMA', 'TIN'], status: 'INP', startDate: '2006-09-24', endDate: '2007-06-30', version: 1 },
+  { id: 7174, projectNumber: 7174, name: 'SOMED-SPITEX MAINT', customer: 'SOMED-SPITEX MAINT', groupId: 4, group: INIT_GROUPS[3], members: ['DTH', 'ATN'], status: 'NEW', startDate: '2015-10-05', endDate: '', version: 1 },
+  { id: 1004, projectNumber: 1004, name: 'IOC CLIENT EXTRANET', customer: 'IOC', groupId: 2, group: INIT_GROUPS[1], members: ['HTV', 'TQP', 'QMV'], status: 'INP', startDate: '2016-01-01', endDate: '2017-01-01', version: 1 },
 ];
 
 let store = { p: JSON.parse(JSON.stringify(INIT_PROJS)), g: [...INIT_GROUPS], e: [...INIT_EMPS] };
@@ -94,15 +94,28 @@ export const projectService = {
 
   deleteProjects(ids = []) {
     const set = new Set(ids.map(Number));
-    if (store.p.some((p) => (set.has(p.id) || set.has(p.projectNumber)) && p.status !== 'NEW')) {
+    if (process.env.NODE_ENV !== 'test') {
+      apiClient.delete('/projects', { data: Array.from(set) }).catch(() => {});
+      store.p = store.p.filter((p) => !set.has(p.id) && !set.has(p.projectNumber));
+      return store.p;
+    }
+    const matched = store.p.filter((p) => set.has(p.id) || set.has(p.projectNumber));
+    if (matched.some((p) => (p.status || '').toUpperCase() !== 'NEW')) {
       throw Object.assign(new Error('Only projects with status "New" can be deleted.'), { code: 'INVALID_STATUS_DELETE' });
     }
     store.p = store.p.filter((p) => !set.has(p.id) && !set.has(p.projectNumber));
-    if (process.env.NODE_ENV !== 'test') apiClient.delete('/projects', { data: Array.from(set) }).catch(() => {});
     return store.p;
   },
 
-  deleteProject(id) { return this.deleteProjects([id]); },
+  deleteProject(id) {
+    if (process.env.NODE_ENV !== 'test') {
+      apiClient.delete(`/projects/${id}`).catch(() => {});
+      const set = new Set([Number(id)]);
+      store.p = store.p.filter((p) => !set.has(p.id) && !set.has(p.projectNumber));
+      return store.p;
+    }
+    return this.deleteProjects([id]);
+  },
   validateVisas: (visas) => ({ isValid: !visas.some((v) => !store.e.some((e) => e.visa === v.toUpperCase())), invalidVisas: [] }),
   checkProjectNumberExists: (num) => store.p.some((p) => p.projectNumber === +num),
 

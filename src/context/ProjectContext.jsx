@@ -35,7 +35,7 @@ function ProjectProviderInner({ children }) {
       if (process.env.NODE_ENV !== 'test') {
         try {
           const api = await projectService.searchProjectsApi(searchCriteria, { page: pageIndex, size: 5, sort });
-          if (api?.content?.length) return api;
+          if (api?.content !== undefined) return api;
         } catch {}
       }
       return local;

@@ -125,7 +125,7 @@ export function useProjectList() {
 
   const openDelete = (targets, msg) => {
     setActionError('');
-    if (targets.some((p) => p.status !== 'NEW')) return setActionError(t('projectList.statusOnlyNewDelete'));
+    if (targets.some((p) => (p.status || '').toUpperCase() !== 'NEW')) return setActionError(t('projectList.statusOnlyNewDelete'));
     setModalConfig({ isOpen: true, ids: targets.map((p) => p.id || p.projectNumber), message: msg });
   };
 
@@ -134,7 +134,7 @@ export function useProjectList() {
       await (modalConfig.ids.length === 1 ? deleteProject(modalConfig.ids[0]) : deleteProjects(modalConfig.ids));
       setSelectedIds((prev) => prev.filter((id) => !modalConfig.ids.includes(id)));
     } catch (err) {
-      setActionError(err.message || 'Failed to delete');
+      setActionError(err.response?.data?.message || err.message || 'Failed to delete');
     } finally {
       setModalConfig({ isOpen: false, ids: [], message: '' });
     }
