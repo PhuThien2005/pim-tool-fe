@@ -20,9 +20,7 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
   const [chips, setChips] = useState(() => (value ? value.split(',').map((v) => v.trim()).filter(Boolean) : []));
 
   useEffect(() => {
-    if (!inputText) {
-      setChips(value ? value.split(',').map((v) => v.trim()).filter(Boolean) : []);
-    }
+    if (!inputText) setChips(value ? value.split(',').map((v) => v.trim()).filter(Boolean) : []);
   }, [value, inputText]);
 
   useEffect(() => {
@@ -35,15 +33,11 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
 
   const triggerSearch = useCallback((token, currentChips) => {
     tokenRef.current = token;
-    if (!token) {
-      setFilteredEmployees([]);
-      return setIsOpen(false);
-    }
+    if (!token) { setFilteredEmployees([]); return setIsOpen(false); }
 
     const selectedSet = new Set(currentChips.map((v) => v.toUpperCase()));
     const local = employees.filter(
-      (e) =>
-        !selectedSet.has(e.visa.toUpperCase()) &&
+      (e) => !selectedSet.has(e.visa.toUpperCase()) &&
         (e.visa.toLowerCase().includes(token) || `${e.firstName} ${e.lastName}`.toLowerCase().includes(token))
     );
     setFilteredEmployees(local);
@@ -63,11 +57,7 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
             setHasMore(!slice.last && apiMatches.length > 0);
             setIsOpen(Boolean(apiMatches.length));
           }
-        } catch {
-          // keep local
-        } finally {
-          setLoading(false);
-        }
+        } catch {} finally { setLoading(false); }
       }, 300);
     }
   }, [employees]);
@@ -83,10 +73,7 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
 
   const handleInputChange = (e) => {
     const val = e.target.value;
-    if (val.includes(',')) {
-      updateChips([...chips, ...val.split(',')]);
-      return;
-    }
+    if (val.includes(',')) return updateChips([...chips, ...val.split(',')]);
     setInputText(val);
     triggerSearch(val.trim().toLowerCase(), chips);
     onChange([...chips, val.trim()].filter(Boolean).join(', '));
@@ -98,22 +85,12 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
       updateChips(chips.slice(0, -1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (isOpen && filteredEmployees[highlightedIndex]) {
-        updateChips([...chips, filteredEmployees[highlightedIndex].visa]);
-      } else if (inputText.trim()) {
-        updateChips([...chips, inputText]);
-      }
+      const target = isOpen && filteredEmployees[highlightedIndex] ? filteredEmployees[highlightedIndex].visa : inputText.trim();
+      if (target) updateChips([...chips, target]);
     } else if (isOpen && filteredEmployees.length) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setHighlightedIndex((i) => (i + 1) % filteredEmployees.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setHighlightedIndex((i) => (i - 1 + filteredEmployees.length) % filteredEmployees.length);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setIsOpen(false);
-      }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightedIndex((i) => (i + 1) % filteredEmployees.length); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightedIndex((i) => (i - 1 + filteredEmployees.length) % filteredEmployees.length); }
+      else if (e.key === 'Escape') { e.preventDefault(); setIsOpen(false); }
     }
   };
 
@@ -122,8 +99,7 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
     if (scrollTop + clientHeight >= scrollHeight - 20 && hasMore && !loading) {
       setLoading(true);
       const nextPage = empPage + 1;
-      projectService
-        .searchEmployeesApi(tokenRef.current, { page: nextPage, size: 10, sort: 'visa,asc' })
+      projectService.searchEmployeesApi(tokenRef.current, { page: nextPage, size: 10, sort: 'visa,asc' })
         .then((slice) => {
           if (slice?.content) {
             const selectedSet = new Set(chips.map((v) => v.toUpperCase()));
@@ -149,17 +125,7 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
         {chips.map((visa) => (
           <span key={visa} className="member-chip">
             <span>{getTagLabel(visa)}</span>
-            <button
-              type="button"
-              className="member-chip-remove"
-              onClick={(e) => {
-                e.stopPropagation();
-                updateChips(chips.filter((v) => v.toUpperCase() !== visa.toUpperCase()));
-              }}
-              title="Remove member"
-            >
-              ✕
-            </button>
+            <button type="button" className="member-chip-remove" onClick={(e) => { e.stopPropagation(); updateChips(chips.filter((v) => v.toUpperCase() !== visa.toUpperCase())); }} title="Remove member">✕</button>
           </span>
         ))}
         <input
@@ -176,20 +142,11 @@ export default function MemberSuggest({ value = '', onChange, employees = [], ha
       {isOpen && !!filteredEmployees.length && (
         <ul className="member-suggest-dropdown" onScroll={handleDropdownScroll}>
           {filteredEmployees.map((emp, idx) => (
-            <li
-              key={emp.id || emp.visa}
-              onClick={() => updateChips([...chips, emp.visa])}
-              className={`member-suggest-item ${idx === highlightedIndex ? 'active' : ''}`}
-              onMouseEnter={() => setHighlightedIndex(idx)}
-            >
+            <li key={emp.id || emp.visa} onClick={() => updateChips([...chips, emp.visa])} className={`member-suggest-item ${idx === highlightedIndex ? 'active' : ''}`} onMouseEnter={() => setHighlightedIndex(idx)}>
               <span>{emp.visa}: {emp.firstName} {emp.lastName}</span>
             </li>
           ))}
-          {loading && (
-            <li className="member-suggest-item" style={{ justifyContent: 'center', color: '#888' }}>
-              <span>Loading more...</span>
-            </li>
-          )}
+          {loading && <li className="member-suggest-item" style={{ justifyContent: 'center', color: '#888' }}><span>Loading more...</span></li>}
         </ul>
       )}
     </div>
