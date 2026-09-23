@@ -73,4 +73,23 @@ export const LanguageProvider = ({ children }) => {
 
 export const useLanguage = () => useContext(LanguageContext);
 
+/**
+ * Ultra-concise translation hook.
+ * Supports both direct call:
+ *   const t = useTranslate();
+ *   <h1>{t('projectList.title')}</h1>
+ * And destructuring:
+ *   const { t, language, setLanguage } = useTranslate();
+ */
+export const useTranslate = () => {
+  const ctx = useContext(LanguageContext);
+  const fn = (path, params) => ctx.t(path, params);
+  fn.t = ctx.t;
+  fn.language = ctx.language;
+  fn.setLanguage = ctx.setLanguage;
+  return fn;
+};
+
+export const useTranslation = useTranslate;
+
 export default LanguageContext;
