@@ -8,17 +8,18 @@ Tài liệu này tổng hợp toàn bộ hệ thống công nghệ, kiến trúc
 
 | Thành phần | Phiên bản / Công nghệ | Vai trò & Mục đích sử dụng |
 |---|---|---|
-| **React** | `16.13.1` | Thư viện UI cốt lõi. Sử dụng 100% **Functional Components** kết hợp với **React Hooks** (`useState`, `useEffect`, `useRef`, `useCallback`, `useMemo`, `useContext`). |
-| **React DOM** | `16.13.1` | Quản lý việc render cây DOM ảo (Virtual DOM) trên trình duyệt. |
-| **Node.js Support** | `cross-env ^10.1.0` | Cấu hình cờ `--openssl-legacy-provider` để ứng dụng tương thích hoàn hảo với các phiên bản Node.js hiện đại (Node 17, 18, 20, 22+) mà không phát sinh lỗi mã hóa OpenSSL 3.0. |
+| **React** | `18.3.1` (LTS) | Thư viện UI cốt lõi. Sử dụng 100% **Functional Components** kết hợp với **React Hooks** (`useState`, `useEffect`, `useRef`, `useCallback`, `useMemo`, `useContext`, `useNavigate`, `useParams`, `useLocation`). Hỗ trợ Concurrent Rendering và tự động batching. |
+| **React DOM** | `18.3.1` (LTS) | Quản lý việc render cây DOM ảo thông qua API hiện đại `createRoot(document.getElementById('root'))` từ `react-dom/client`. |
+| **Node.js Support** | `cross-env ^10.1.0` | Cấu hình cờ `--openssl-legacy-provider` để ứng dụng tương thích hoàn hảo với các phiên bản Node.js hiện đại (Node 18, 20, 22, 24+) mà không phát sinh lỗi mã hóa OpenSSL 3.0. |
 | **React Scripts** | `3.4.3` | Nền tảng Create React App đóng gói Webpack 4 và Babel, quản lý quy trình build và hot-reload dev server. |
 
 ---
 
 ## 2. Quản lý Điều hướng & Định tuyến (Routing)
 
-- **Thư viện:** `react-router-dom: ^5.2.0`
-- **Mô hình định tuyến:** Single Page Application (SPA) thông qua `BrowserRouter`, `Switch`, `Route`, `Redirect`, `NavLink`, `Link`.
+- **Thư viện:** `react-router-dom: ^6.30.6` (React Router v6 hiện đại nhất)
+- **Mô hình định tuyến:** Single Page Application (SPA) thông qua `BrowserRouter`, `<Routes>`, `<Route element={<Component />} />`, `<Navigate to="..." replace />`, `NavLink` (`end`), `Link`.
+- **Modern Navigation Hook:** Sử dụng `useNavigate()` thay thế hoàn toàn cho `useHistory()` cũ, loại bỏ nguy cơ re-render không cần thiết và tối ưu hóa chuyển trang client-side.
 - **Sơ đồ các tuyến đường (Routes):**
   - `/` hoặc `/projects`: Màn hình danh sách dự án (**ProjectListPage**) — tìm kiếm, bộ lọc nâng cao, sắp xếp, phân trang, xóa.
   - `/project/new` hoặc `/create-project`: Màn hình tạo mới dự án (**ProjectCreateEditPage**).
