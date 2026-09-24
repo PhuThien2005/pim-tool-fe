@@ -24,6 +24,8 @@ const ADV_FIELDS = [
   { label: 'endDateTo', key: 'endDateTo', isDate: true },
 ];
 
+const ADV_KEYS = ADV_FIELDS.map((f) => f.key);
+
 export default function ProjectList() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,31 +35,21 @@ export default function ProjectList() {
     deleteProjects, loading, groups, loadGroups, employees, loadEmployees
   } = useProjects();
 
-  const urlKeyword = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
-  const urlStatus = (searchParams.get('status') || '').toUpperCase();
-  const urlLeader = searchParams.get('leaderVisa') || '';
-  const urlMember = searchParams.get('memberVisas') || searchParams.get('memberVisa') || '';
-  const urlStartFrom = searchParams.get('startDateFrom') || '';
-  const urlStartTo = searchParams.get('startDateTo') || '';
-  const urlEndFrom = searchParams.get('endDateFrom') || '';
-  const urlEndTo = searchParams.get('endDateTo') || '';
+  const urlKw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
+  const urlSt = (searchParams.get('status') || '').toUpperCase();
+  const initialSearch = urlKw || searchCriteria.searchTerm || '';
+  const initialStatus = urlSt || searchCriteria.status || '';
 
-  const initialSearch = urlKeyword || searchCriteria.searchTerm || '';
-  const initialStatus = urlStatus || searchCriteria.status || '';
-  const initialAdv = {
-    leaderVisa: urlLeader || searchCriteria.leaderVisa || '',
-    memberVisas: urlMember || searchCriteria.memberVisas || '',
-    startDateFrom: urlStartFrom || searchCriteria.startDateFrom || '',
-    startDateTo: urlStartTo || searchCriteria.startDateTo || '',
-    endDateFrom: urlEndFrom || searchCriteria.endDateFrom || '',
-    endDateTo: urlEndTo || searchCriteria.endDateTo || '',
-  };
+  const initialAdv = Object.fromEntries(
+    ADV_KEYS.map((k) => [
+      k,
+      searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || searchCriteria[k] || ''
+    ])
+  );
 
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [statusInput, setStatusInput] = useState(initialStatus);
-  const [showAdvanced, setShowAdvanced] = useState(
-    Boolean(initialAdv.leaderVisa || initialAdv.memberVisas || initialAdv.startDateFrom || initialAdv.startDateTo || initialAdv.endDateFrom || initialAdv.endDateTo)
-  );
+  const [showAdvanced, setShowAdvanced] = useState(Object.values(initialAdv).some(Boolean));
   const [advInputs, setAdvInputs] = useState(initialAdv);
 
   const [selectedIds, setSelectedIds] = useState([]);
@@ -75,60 +67,45 @@ export default function ProjectList() {
   }, [showAdvanced, groups.length, loadGroups, employees.length, loadEmployees]);
 
   const updateUrlParams = (c) => {
-    const params = {};
-    if (c.searchTerm) params.searchTerm = c.searchTerm;
-    if (c.status) params.status = c.status;
-    if (c.leaderVisa) params.leaderVisa = c.leaderVisa;
-    if (c.memberVisas) params.memberVisas = c.memberVisas;
-    if (c.startDateFrom) params.startDateFrom = c.startDateFrom;
-    if (c.startDateTo) params.startDateTo = c.startDateTo;
-    if (c.endDateFrom) params.endDateFrom = c.endDateFrom;
-    if (c.endDateTo) params.endDateTo = c.endDateTo;
+    const params = Object.fromEntries(Object.entries(c).filter(([_, v]) => Boolean(v)));
     setSearchParams(params, { replace: true });
   };
 
   const syncSearch = () => ({
-    searchTerm: searchInput, status: (statusInput || '').toUpperCase(),
-    leaderVisa: (advInputs.leaderVisa || '').toUpperCase(), memberVisas: (advInputs.memberVisas || '').replace(/\s*,\s*/g, ',').toUpperCase(),
-    startDateFrom: advInputs.startDateFrom, startDateTo: advInputs.startDateTo,
-    endDateFrom: advInputs.endDateFrom, endDateTo: advInputs.endDateTo,
+    searchTerm: searchInput.trim(),
+    status: (statusInput || '').toUpperCase(),
+    ...Object.fromEntries(
+      Object.entries(advInputs).map(([k, v]) => [
+        k,
+        k === 'memberVisas'
+          ? (v || '').replace(/\s*,\s*/g, ',').toUpperCase()
+          : k === 'leaderVisa'
+          ? (v || '').toUpperCase()
+          : (v || '').trim()
+      ])
+    ),
   });
 
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      // If we came from another page (e.g. Cancel new project) and context has criteria but URL doesn't, sync URL
-      const needsSync = (!urlKeyword && initialSearch) || (!urlStatus && initialStatus) ||
-                        (!urlLeader && initialAdv.leaderVisa) || (!urlMember && initialAdv.memberVisas) ||
-                        (!urlStartFrom && initialAdv.startDateFrom) || (!urlStartTo && initialAdv.startDateTo) ||
-                        (!urlEndFrom && initialAdv.endDateFrom) || (!urlEndTo && initialAdv.endDateTo);
+      const needsSync = (!urlKw && initialSearch) || (!urlSt && initialStatus) || ADV_KEYS.some((k) => !searchParams.get(k) && initialAdv[k]);
       if (needsSync) updateUrlParams({ searchTerm: initialSearch, status: initialStatus, ...initialAdv });
       return;
     }
 
-    // Sync state when URL changes externally (e.g. Browser Back/Forward buttons)
     const kw = searchParams.get('searchTerm') || searchParams.get('keyword') || searchParams.get('search') || '';
     const st = (searchParams.get('status') || '').toUpperCase();
-    const ld = searchParams.get('leaderVisa') || '';
-    const mb = searchParams.get('memberVisas') || searchParams.get('memberVisa') || '';
-    const sf = searchParams.get('startDateFrom') || '';
-    const st2 = searchParams.get('startDateTo') || '';
-    const ef = searchParams.get('endDateFrom') || '';
-    const et = searchParams.get('endDateTo') || '';
+    const currentAdv = Object.fromEntries(
+      ADV_KEYS.map((k) => [k, searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || ''])
+    );
 
-    if (
-      kw !== searchInput || st !== statusInput ||
-      ld !== advInputs.leaderVisa || mb !== advInputs.memberVisas ||
-      sf !== advInputs.startDateFrom || st2 !== advInputs.startDateTo ||
-      ef !== advInputs.endDateFrom || et !== advInputs.endDateTo
-    ) {
+    const isDifferent = kw !== searchInput || st !== statusInput || ADV_KEYS.some((k) => currentAdv[k] !== advInputs[k]);
+
+    if (isDifferent) {
       setSearchInput(kw);
       setStatusInput(st);
-      setAdvInputs({
-        leaderVisa: ld, memberVisas: mb,
-        startDateFrom: sf, startDateTo: st2,
-        endDateFrom: ef, endDateTo: et,
-      });
+      setAdvInputs(currentAdv);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -162,7 +139,7 @@ export default function ProjectList() {
     clearTimeout(debounceTimer.current);
     setSearchInput('');
     setStatusInput('');
-    setAdvInputs({ leaderVisa: '', memberVisas: '', startDateFrom: '', startDateTo: '', endDateFrom: '', endDateTo: '' });
+    setAdvInputs(Object.fromEntries(ADV_KEYS.map((k) => [k, ''])));
     setActionError('');
     resetSearch();
     setSearchParams({}, { replace: true });
