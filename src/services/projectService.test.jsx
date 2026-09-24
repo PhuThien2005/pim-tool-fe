@@ -5,8 +5,8 @@ describe('projectService Unit Tests', () => {
     projectService.resetToDefault();
   });
 
-  test('getProjects returns initial list of projects sorted or accessible', () => {
-    const projects = projectService.getProjects();
+  test('getProjects returns initial list of projects sorted or accessible', async () => {
+    const projects = await projectService.getProjects();
     expect(projects.length).toBeGreaterThan(0);
     expect(projects.some((p) => p.projectNumber === 3116)).toBe(true);
   });
@@ -17,7 +17,7 @@ describe('projectService Unit Tests', () => {
     expect(project.name).toBe('Facturation / Encaissements');
   });
 
-  test('createProject successfully creates a project with valid data', () => {
+  test('createProject successfully creates a project with valid data', async () => {
     const newProj = {
       projectNumber: 9999,
       name: 'New Test Project',
@@ -29,7 +29,7 @@ describe('projectService Unit Tests', () => {
       endDate: '2026-12-31',
     };
 
-    const created = projectService.createProject(newProj);
+    const created = await projectService.createProject(newProj);
     expect(created.projectNumber).toBe(9999);
     expect(created.members).toEqual(['DTH', 'BHU']);
 
@@ -38,7 +38,7 @@ describe('projectService Unit Tests', () => {
     expect(retrieved.name).toBe('New Test Project');
   });
 
-  test('createProject throws DUPLICATE_NUMBER when number already exists', () => {
+  test('createProject throws DUPLICATE_NUMBER when number already exists', async () => {
     const duplicate = {
       projectNumber: 3116,
       name: 'Duplicate Number Proj',
@@ -48,12 +48,12 @@ describe('projectService Unit Tests', () => {
       startDate: '2026-01-01',
     };
 
-    expect(() => projectService.createProject(duplicate)).toThrow(
+    await expect(projectService.createProject(duplicate)).rejects.toThrow(
       'The project number already existed. Please select a different project number'
     );
   });
 
-  test('createProject throws INVALID_VISAS when invalid visa is supplied', () => {
+  test('createProject throws INVALID_VISAS when invalid visa is supplied', async () => {
     const invalidVisaProj = {
       projectNumber: 9001,
       name: 'Invalid Visa Proj',
@@ -65,7 +65,7 @@ describe('projectService Unit Tests', () => {
     };
 
     try {
-      projectService.createProject(invalidVisaProj);
+      await projectService.createProject(invalidVisaProj);
       fail('Should have thrown INVALID_VISAS');
     } catch (err) {
       expect(err.code).toBe('INVALID_VISAS');
@@ -74,7 +74,7 @@ describe('projectService Unit Tests', () => {
     }
   });
 
-  test('createProject throws INVALID_END_DATE when end date is earlier than start date', () => {
+  test('createProject throws INVALID_END_DATE when end date is earlier than start date', async () => {
     const invalidDateProj = {
       projectNumber: 9002,
       name: 'Invalid Date Proj',
@@ -86,14 +86,14 @@ describe('projectService Unit Tests', () => {
     };
 
     try {
-      projectService.createProject(invalidDateProj);
+      await projectService.createProject(invalidDateProj);
       fail('Should have thrown INVALID_END_DATE');
     } catch (err) {
       expect(err.code).toBe('INVALID_END_DATE');
     }
   });
 
-  test('updateProject updates existing project and increments version', () => {
+  test('updateProject updates existing project and increments version', async () => {
     const updateData = {
       name: 'Updated Facturation',
       customer: 'New Customer Name',
@@ -105,13 +105,13 @@ describe('projectService Unit Tests', () => {
       version: 1,
     };
 
-    const updated = projectService.updateProject(3116, updateData);
+    const updated = await projectService.updateProject(3116, updateData);
     expect(updated.name).toBe('Updated Facturation');
     expect(updated.status).toBe('INP');
     expect(updated.version).toBe(2);
   });
 
-  test('updateProject detects concurrent update error when version does not match', () => {
+  test('updateProject detects concurrent update error when version does not match', async () => {
     const concurrentData = {
       name: 'Concurrent Edit',
       customer: 'Customer',
@@ -121,43 +121,43 @@ describe('projectService Unit Tests', () => {
       version: 99, // mismatch
     };
 
-    expect(() => projectService.updateProject(3116, concurrentData)).toThrow(
+    await expect(projectService.updateProject(3116, concurrentData)).rejects.toThrow(
       'Concurrent update detected'
     );
   });
 
-  test('deleteProjects allows deleting projects with status NEW', () => {
+  test('deleteProjects allows deleting projects with status NEW', async () => {
     // Project 3116 has status NEW
-    projectService.deleteProjects([3116]);
+    await projectService.deleteProjects([3116]);
     expect(projectService.getProjectByNumber(3116)).toBeNull();
   });
 
-  test('deleteProjects throws error when attempting to delete non-NEW project', () => {
+  test('deleteProjects throws error when attempting to delete non-NEW project', async () => {
     // Project 3118 has status FIN
-    expect(() => projectService.deleteProjects([3118])).toThrow(
+    await expect(projectService.deleteProjects([3118])).rejects.toThrow(
       'Only projects with status "New" can be deleted.'
     );
     expect(projectService.getProjectByNumber(3118)).toBeDefined();
   });
 
-  test('searchProjects filters by advanced criteria (memberVisa and date range)', () => {
-    // Search with memberVisa DTH
-    const resMember = projectService.searchProjects({ memberVisa: 'DTH' });
+  test('searchProjects filters by advanced criteria (memberVisas and date range)', async () => {
+    // Search with memberVisas DTH
+    const resMember = await projectService.searchProjects({ memberVisas: 'DTH' });
     expect(resMember.content.length).toBeGreaterThan(0);
     expect(resMember.content.every((p) => p.members.includes('DTH'))).toBe(true);
 
     // Search with date range >= 2005-01-01
-    const resDate = projectService.searchProjects({ startDateFrom: '2005-01-01' });
+    const resDate = await projectService.searchProjects({ startDateFrom: '2005-01-01' });
     expect(resDate.content.every((p) => p.startDate >= '2005-01-01')).toBe(true);
   });
 
-  test('searchProjects sorts dynamically by column name ascending and descending', () => {
-    const resAsc = projectService.searchProjects({}, { page: 0, size: 10, sort: 'name,asc' });
+  test('searchProjects sorts dynamically by column name ascending and descending', async () => {
+    const resAsc = await projectService.searchProjects({}, { page: 0, size: 10, sort: 'name,asc' });
     for (let i = 0; i < resAsc.content.length - 1; i++) {
       expect(resAsc.content[i].name.localeCompare(resAsc.content[i + 1].name)).toBeLessThanOrEqual(0);
     }
 
-    const resDesc = projectService.searchProjects({}, { page: 0, size: 10, sort: 'name,desc' });
+    const resDesc = await projectService.searchProjects({}, { page: 0, size: 10, sort: 'name,desc' });
     for (let i = 0; i < resDesc.content.length - 1; i++) {
       expect(resDesc.content[i].name.localeCompare(resDesc.content[i + 1].name)).toBeGreaterThanOrEqual(0);
     }

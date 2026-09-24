@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Pagination from '../common/Pagination';
 import ConfirmModal from '../common/ConfirmModal';
 import LocaleDatePicker from '../common/LocaleDatePicker';
+import MemberSuggest from './MemberSuggest';
 import { useProjectList } from '../../hooks/useProjectList';
 
 const COLS = [
@@ -12,8 +13,8 @@ const COLS = [
 ];
 
 const ADV_FIELDS = [
-  { label: 'leaderPlaceholder', key: 'leaderVisa', type: 'text', placeholder: 'e.g. DTH', list: 'leader-visas-list' },
-  { label: 'memberPlaceholder', key: 'memberVisa', type: 'text', placeholder: 'e.g. BHU' },
+  { label: 'leaderPlaceholder', key: 'leaderVisa', isSelect: true },
+  { label: 'memberPlaceholder', key: 'memberVisas', isMemberSuggest: true },
   { label: 'startDateFrom', key: 'startDateFrom', isDate: true },
   { label: 'startDateTo', key: 'startDateTo', isDate: true },
   { label: 'endDateFrom', key: 'endDateFrom', isDate: true },
@@ -22,7 +23,7 @@ const ADV_FIELDS = [
 
 export default function ProjectList() {
   const {
-    t, projects, groups, totalPages, currentPage, setCurrentPage, loading,
+    t, projects, groups, employees, totalPages, currentPage, setCurrentPage, loading,
     searchInput, setSearchInput, statusInput, setStatusInput, showAdvanced, setShowAdvanced,
     advInputs, handleAdvChange, selectedIds, modalConfig, setModalConfig, actionError,
     handleSearch, handleReset, toggleSelectRow, openDelete, confirmDelete,
@@ -52,21 +53,23 @@ export default function ProjectList() {
       {showAdvanced && (
         <div className="advanced-filter-panel">
           <div className="advanced-filter-grid">
-            {ADV_FIELDS.map(({ label, key, type, placeholder, list, isDate }) => (
+            {ADV_FIELDS.map(({ label, key, type, placeholder, isDate, isSelect, isMemberSuggest }) => (
               <div key={key} className="advanced-filter-item">
                 <label className="advanced-filter-label" htmlFor={key}>{t(`projectList.${label}`)}</label>
                 {isDate ? (
                   <LocaleDatePicker id={key} value={advInputs[key]} onChange={(val) => handleAdvChange(key, val)} />
-                ) : (
-                  <input id={key} type={type} className="pim-input" placeholder={placeholder} value={advInputs[key]} onChange={(e) => handleAdvChange(key, e.target.value)} list={list} />
-                )}
-                {list && (
-                  <datalist id={list}>
+                ) : isSelect ? (
+                  <select id={key} className="pim-select input-md" value={advInputs[key]} onChange={(e) => handleAdvChange(key, e.target.value)}>
+                    <option value=""></option>
                     {(groups || []).map((g) => {
                       const visa = g.groupLeader?.visa || g.leaderVisa;
-                      return visa ? <option key={g.id} value={visa} /> : null;
+                      return visa ? <option key={g.id} value={visa}>{visa}</option> : null;
                     })}
-                  </datalist>
+                  </select>
+                ) : isMemberSuggest ? (
+                  <MemberSuggest value={advInputs[key]} onChange={(v) => handleAdvChange(key, v)} employees={employees} />
+                ) : (
+                  <input id={key} type={type} className="pim-input" placeholder={placeholder} value={advInputs[key]} onChange={(e) => handleAdvChange(key, e.target.value)} />
                 )}
               </div>
             ))}

@@ -9,62 +9,94 @@ const initialCriteria = {
   startDateFrom: '', startDateTo: '', endDateFrom: '', endDateTo: '',
 };
 
+const EMPTY_PAGE = { content: [], totalPages: 1, totalElements: 0 };
+
 export const defaultQueryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 });
 
 function ProjectProviderInner({ children }) {
   const queryClient = useQueryClient();
-  const [searchCriteria, setSearchCriteriaState] = useState(initialCriteria);
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialCriteriaFromUrl = {
+    searchTerm: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
+    status: (searchParams.get('status') || '').toUpperCase(),
+    leaderVisa: searchParams.get('leaderVisa') || '',
+    memberVisas: (searchParams.get('memberVisas') || searchParams.get('memberVisa') || '').replace(/\s*,\s*/g, ','),
+    startDateFrom: searchParams.get('startDateFrom') || '',
+    startDateTo: searchParams.get('startDateTo') || '',
+    endDateFrom: searchParams.get('endDateFrom') || '',
+    endDateTo: searchParams.get('endDateTo') || '',
+  };
+  const [searchCriteria, setSearchCriteriaState] = useState(initialCriteriaFromUrl);
   const [sortConfig, setSortConfig] = useState({ field: 'projectNumber', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [groups, setGroups] = useState(() => projectService.getGroups());
-  const [employees] = useState(() => projectService.getEmployees());
+  const [groups, setGroups] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
-  const getProjects = (c = searchCriteria, p = currentPage, s = sortConfig) =>
-    projectService.searchProjects(c, { page: Math.max(0, p - 1), size: 5, sort: `${s.field},${s.direction}` });
-
-  const [localResult, setLocalResult] = useState(() => getProjects());
-
-  const { data: queryResult, isLoading: loading } = useQuery({
+  // useQuery is the SOLE data source for projects — no more localResult
+  const { data: pageResult = EMPTY_PAGE, isLoading: loading } = useQuery({
     queryKey: ['projects', searchCriteria, currentPage, sortConfig],
     queryFn: async () => {
       const pageIndex = Math.max(0, currentPage - 1);
       const sort = `${sortConfig.field},${sortConfig.direction}`;
-      const local = projectService.searchProjects(searchCriteria, { page: pageIndex, size: 5, sort });
-      if (process.env.NODE_ENV !== 'test') {
-        try {
-          const api = await projectService.searchProjectsApi(searchCriteria, { page: pageIndex, size: 5, sort });
-          if (api?.content !== undefined) return api;
-        } catch {}
-      }
-      return local;
+      return projectService.searchProjects(searchCriteria, { page: pageIndex, size: 5, sort });
     },
-    onSuccess: (data) => setLocalResult(data),
   });
 
-  const syncCache = (nextCriteria = searchCriteria, nextPage = currentPage, nextSort = sortConfig) => {
-    const nextData = getProjects(nextCriteria, nextPage, nextSort);
-    setLocalResult(nextData);
-    queryClient.setQueryData(['projects', nextCriteria, nextPage, nextSort], nextData);
-    queryClient.invalidateQueries({ queryKey: ['projects'] });
-  };
-
+  // Lazy load groups — only called when filter panel opens or form mounts
   const loadGroups = useCallback(async () => {
-    if (process.env.NODE_ENV === 'test') return;
+    if (groups.length) return; // already loaded
     try {
-      const slice = await projectService.getGroupsApi({ page: 0, size: 20, sort: 'id,asc' });
-      if (slice?.content?.length) setGroups(slice.content);
-    } catch {}
-  }, []);
+      const result = await projectService.getGroups({ page: 0, size: 50, sort: 'id,asc' });
+      const list = Array.isArray(result) ? result : result?.content || [];
+      if (list.length) setGroups(list);
+    } catch { /* silent */ }
+  }, [groups.length]);
 
-  const mutate = (action) => {
-    const res = action();
-    syncCache();
+  // Lazy load employees — only called when member suggest needs it
+  const loadEmployees = useCallback(async () => {
+    if (employees.length) return; // already loaded
+    try {
+      const result = await projectService.getEmployees({ page: 0, size: 50, sort: 'visa,asc' });
+      const list = Array.isArray(result) ? result : result?.content || [];
+      if (list.length) setEmployees(list);
+    } catch { /* silent */ }
+  }, [employees.length]);
+
+  const refreshProjects = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    [queryClient]
+  );
+
+  // CRUD operations — all async, invalidate cache after
+  const createProject = useCallback(async (data) => {
+    const res = await projectService.createProject(data);
+    refreshProjects();
     return res;
-  };
+  }, [refreshProjects]);
 
-  const pageResult = queryResult || localResult;
+  const updateProject = useCallback(async (num, data) => {
+    const res = await projectService.updateProject(num, data);
+    refreshProjects();
+    return res;
+  }, [refreshProjects]);
+
+  const deleteProject = useCallback(async (id) => {
+    const res = await projectService.deleteProject(id);
+    refreshProjects();
+    return res;
+  }, [refreshProjects]);
+
+  const deleteProjects = useCallback(async (ids) => {
+    const res = await projectService.deleteProjects(ids);
+    refreshProjects();
+    return res;
+  }, [refreshProjects]);
+
+  const getProjectByNumber = useCallback((num) => {
+    return (pageResult.content || []).find((p) => p.projectNumber === +num || p.id === +num) || null;
+  }, [pageResult.content]);
 
   return (
     <ProjectContext.Provider
@@ -72,22 +104,19 @@ function ProjectProviderInner({ children }) {
         projects: pageResult.content || [],
         totalPages: pageResult.totalPages || 1,
         totalElements: pageResult.totalElements || 0,
-        loading, groups, loadGroups, employees,
+        loading, groups, employees, loadGroups, loadEmployees,
         searchCriteria, sortConfig, currentPage,
-        setSearchCriteria: (c) => { const next = { ...searchCriteria, ...c }; setSearchCriteriaState(next); setCurrentPage(1); syncCache(next, 1, sortConfig); },
-        resetSearch: () => { setSearchCriteriaState(initialCriteria); setCurrentPage(1); syncCache(initialCriteria, 1, sortConfig); },
-        setCurrentPage: (p) => { setCurrentPage(p); syncCache(searchCriteria, p, sortConfig); },
+        setSearchCriteria: (c) => { const next = { ...searchCriteria, ...c }; setSearchCriteriaState(next); setCurrentPage(1); },
+        resetSearch: () => { setSearchCriteriaState(initialCriteria); setCurrentPage(1); },
+        setCurrentPage,
         toggleSort: (field) => {
-          const next = { field, direction: sortConfig.field === field && sortConfig.direction === 'asc' ? 'desc' : 'asc' };
-          setSortConfig(next);
-          syncCache(searchCriteria, currentPage, next);
+          setSortConfig((prev) => ({
+            field,
+            direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
+          }));
         },
-        createProject: (data) => mutate(() => projectService.createProject(data)),
-        updateProject: (num, data) => mutate(() => projectService.updateProject(num, data)),
-        deleteProject: (id) => mutate(() => projectService.deleteProject(id)),
-        deleteProjects: (ids) => mutate(() => projectService.deleteProjects(ids)),
-        getProjectByNumber: (num) => (pageResult.content || []).find((p) => p.projectNumber === +num || p.id === +num) || projectService.getProjectByNumber(num) || projectService.getProjectById(num),
-        refreshProjects: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
+        createProject, updateProject, deleteProject, deleteProjects,
+        getProjectByNumber, refreshProjects,
       }}
     >
       {children}

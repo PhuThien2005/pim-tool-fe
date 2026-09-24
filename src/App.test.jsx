@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import App from './App';
 
 describe('PIM Tool Application Integration Tests', () => {
-  test('renders header title and navigation', () => {
+  test('renders header title and navigation', async () => {
     render(<App />);
 
     // Header title
@@ -13,9 +13,12 @@ describe('PIM Tool Application Integration Tests', () => {
     expect(screen.getByText('Projects list')).toBeInTheDocument();
     expect(screen.getByText('New', { selector: '.sidebar-heading' })).toBeInTheDocument();
     expect(screen.getByText('Project')).toBeInTheDocument();
+    
+    // Wait for projects to load to prevent act(...) warning
+    await screen.findByRole('link', { name: '3116' });
   });
 
-  test('switches language between English and French', () => {
+  test('switches language between English and French', async () => {
     render(<App />);
 
     const frBtn = screen.getByRole('button', { name: 'FR' });

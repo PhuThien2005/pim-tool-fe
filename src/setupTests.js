@@ -6,3 +6,12 @@ import '@testing-library/jest-dom/extend-expect';
 
 jest.mock('./services/projectService');
 
+if (typeof window !== 'undefined' && typeof window.MutationObserver !== 'undefined') {
+  global.MutationObserver = window.MutationObserver;
+} else {
+  global.MutationObserver = class {
+    constructor(callback) {}
+    disconnect() {}
+    observe(element, initObject) {}
+  };
+}

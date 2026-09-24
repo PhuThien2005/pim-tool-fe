@@ -17,7 +17,7 @@ apiClient.interceptors.request.use((config) => {
     config.headers['Accept-Language'] = 'en';
   }
   // Only set Content-Type for requests with body to avoid CORS preflight on simple GET
-  if (['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
+  if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase())) {
     config.headers['Content-Type'] = 'application/json';
   }
   return config;

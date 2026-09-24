@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useTranslate } from '../context/LanguageContext';
 import { useProjects } from '../context/ProjectContext';
-import { projectService } from '../services/projectService';
 
 export const projectSchema = z
   .object({
@@ -28,11 +27,10 @@ export function useProjectForm(isEdit = false) {
   const navigate = useNavigate();
   const history = useMemo(() => ({ push: navigate, replace: (p) => navigate(p, { replace: true }) }), [navigate]);
   const { projectNumber } = useParams();
-  const { groups: ctxGroups, employees: ctxEmps, createProject, updateProject, getProjectByNumber, loadGroups } = useProjects();
+  const { groups, employees, createProject, updateProject, getProjectByNumber, loadGroups, loadEmployees } = useProjects();
 
   useEffect(() => { loadGroups(); }, [loadGroups]);
-  const groups = ctxGroups?.length ? ctxGroups : projectService.getGroups();
-  const employees = ctxEmps?.length ? ctxEmps : projectService.getEmployees();
+  useEffect(() => { loadEmployees(); }, [loadEmployees]);
 
   const [errorMessage, setErrorMessage] = useState('');
   const [errorFields, setErrorFields] = useState({});
@@ -54,10 +52,15 @@ export function useProjectForm(isEdit = false) {
 
   const formData = watch();
 
+  const projectIdRef = useRef(null);
+
   useEffect(() => {
     if (!isEdit || !projectNumber) return;
     const proj = getProjectByNumber(projectNumber);
     if (!proj) return navigate('/error?detail=Project+not+found', { replace: true });
+    
+    projectIdRef.current = proj.id || proj.projectNumber; // fallback to projectNumber if id is missing
+
     const members = (proj.employees || proj.members || []).map((m) => (typeof m === 'string' ? m : m.visa)).join(', ') || proj.members || '';
     reset({
       projectNumber: String(proj.projectNumber),
@@ -81,7 +84,7 @@ export function useProjectForm(isEdit = false) {
     if (errorFields[field]) setErrorFields((prev) => ({ ...prev, [field]: false }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const result = projectSchema.safeParse(watch());
 
@@ -98,7 +101,11 @@ export function useProjectForm(isEdit = false) {
 
     try {
       const payload = { ...result.data, status: (result.data.status || 'NEW').toUpperCase() };
-      isEdit ? updateProject(projectNumber, payload) : createProject(payload);
+      if (isEdit) {
+        await updateProject(projectIdRef.current, payload);
+      } else {
+        await createProject(payload);
+      }
       navigate('/');
     } catch (err) {
       setIsSubmitting(false);

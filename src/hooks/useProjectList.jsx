@@ -11,13 +11,13 @@ export function useProjectList() {
   const {
     projects, totalPages, searchCriteria, setSearchCriteria, resetSearch,
     sortConfig, toggleSort, currentPage, setCurrentPage, deleteProject,
-    deleteProjects, loading, groups, loadGroups,
+    deleteProjects, loading, groups, loadGroups, employees, loadEmployees
   } = useProjects();
 
   const urlKeyword = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
   const urlStatus = (searchParams.get('status') || '').toUpperCase();
   const urlLeader = searchParams.get('leaderVisa') || '';
-  const urlMember = searchParams.get('memberVisa') || '';
+  const urlMember = searchParams.get('memberVisas') || searchParams.get('memberVisa') || '';
   const urlStartFrom = searchParams.get('startDateFrom') || '';
   const urlStartTo = searchParams.get('startDateTo') || '';
   const urlEndFrom = searchParams.get('endDateFrom') || '';
@@ -27,7 +27,7 @@ export function useProjectList() {
   const initialStatus = urlStatus || searchCriteria.status || '';
   const initialAdv = {
     leaderVisa: urlLeader || searchCriteria.leaderVisa || '',
-    memberVisa: urlMember || searchCriteria.memberVisa || '',
+    memberVisas: urlMember || searchCriteria.memberVisas || '',
     startDateFrom: urlStartFrom || searchCriteria.startDateFrom || '',
     startDateTo: urlStartTo || searchCriteria.startDateTo || '',
     endDateFrom: urlEndFrom || searchCriteria.endDateFrom || '',
@@ -37,7 +37,7 @@ export function useProjectList() {
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [statusInput, setStatusInput] = useState(initialStatus);
   const [showAdvanced, setShowAdvanced] = useState(
-    Boolean(initialAdv.leaderVisa || initialAdv.memberVisa || initialAdv.startDateFrom || initialAdv.startDateTo || initialAdv.endDateFrom || initialAdv.endDateTo)
+    Boolean(initialAdv.leaderVisa || initialAdv.memberVisas || initialAdv.startDateFrom || initialAdv.startDateTo || initialAdv.endDateFrom || initialAdv.endDateTo)
   );
   const [advInputs, setAdvInputs] = useState(initialAdv);
 
@@ -45,29 +45,22 @@ export function useProjectList() {
   const [modalConfig, setModalConfig] = useState({ isOpen: false, ids: [], message: '' });
   const [actionError, setActionError] = useState('');
   const isInitialMount = useRef(true);
+  const isInitialMountDebounce = useRef(true);
   const debounceTimer = useRef();
 
   useEffect(() => {
-    if (urlKeyword || urlStatus || urlLeader || urlMember || urlStartFrom || urlStartTo || urlEndFrom || urlEndTo) {
-      setSearchCriteria({
-        searchTerm: urlKeyword, status: urlStatus, leaderVisa: urlLeader,
-        memberVisa: urlMember, startDateFrom: urlStartFrom, startDateTo: urlStartTo,
-        endDateFrom: urlEndFrom, endDateTo: urlEndTo,
-      });
+    if (showAdvanced) {
+      if (!groups.length) loadGroups();
+      if (!employees.length) loadEmployees();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (showAdvanced && !groups.length) loadGroups();
-  }, [showAdvanced, groups.length, loadGroups]);
+  }, [showAdvanced, groups.length, loadGroups, employees.length, loadEmployees]);
 
   const updateUrlParams = (c) => {
     const params = {};
     if (c.searchTerm) params.searchTerm = c.searchTerm;
     if (c.status) params.status = c.status;
     if (c.leaderVisa) params.leaderVisa = c.leaderVisa;
-    if (c.memberVisa) params.memberVisa = c.memberVisa;
+    if (c.memberVisas) params.memberVisas = c.memberVisas;
     if (c.startDateFrom) params.startDateFrom = c.startDateFrom;
     if (c.startDateTo) params.startDateTo = c.startDateTo;
     if (c.endDateFrom) params.endDateFrom = c.endDateFrom;
@@ -77,13 +70,52 @@ export function useProjectList() {
 
   const syncSearch = () => ({
     searchTerm: searchInput, status: (statusInput || '').toUpperCase(),
-    leaderVisa: (advInputs.leaderVisa || '').toUpperCase(), memberVisa: (advInputs.memberVisa || '').toUpperCase(),
+    leaderVisa: (advInputs.leaderVisa || '').toUpperCase(), memberVisas: (advInputs.memberVisas || '').replace(/\s*,\s*/g, ',').toUpperCase(),
     startDateFrom: advInputs.startDateFrom, startDateTo: advInputs.startDateTo,
     endDateFrom: advInputs.endDateFrom, endDateTo: advInputs.endDateTo,
   });
 
   useEffect(() => {
-    if (isInitialMount.current) { isInitialMount.current = false; return; }
+    if (isInitialMount.current) { 
+      isInitialMount.current = false; 
+      // If we came from another page (e.g. Cancel new project) and context has criteria but URL doesn't, sync URL
+      const needsSync = (!urlKeyword && initialSearch) || (!urlStatus && initialStatus) || 
+                        (!urlLeader && initialAdv.leaderVisa) || (!urlMember && initialAdv.memberVisas) || 
+                        (!urlStartFrom && initialAdv.startDateFrom) || (!urlStartTo && initialAdv.startDateTo) || 
+                        (!urlEndFrom && initialAdv.endDateFrom) || (!urlEndTo && initialAdv.endDateTo);
+      if (needsSync) updateUrlParams({ searchTerm: initialSearch, status: initialStatus, ...initialAdv });
+      return; 
+    }
+
+    // Sync state when URL changes externally (e.g. Browser Back/Forward buttons)
+    const kw = searchParams.get('searchTerm') || searchParams.get('keyword') || searchParams.get('search') || '';
+    const st = (searchParams.get('status') || '').toUpperCase();
+    const ld = searchParams.get('leaderVisa') || '';
+    const mb = searchParams.get('memberVisas') || searchParams.get('memberVisa') || '';
+    const sf = searchParams.get('startDateFrom') || '';
+    const st2 = searchParams.get('startDateTo') || '';
+    const ef = searchParams.get('endDateFrom') || '';
+    const et = searchParams.get('endDateTo') || '';
+
+    if (
+      kw !== searchInput || st !== statusInput ||
+      ld !== advInputs.leaderVisa || mb !== advInputs.memberVisas ||
+      sf !== advInputs.startDateFrom || st2 !== advInputs.startDateTo ||
+      ef !== advInputs.endDateFrom || et !== advInputs.endDateTo
+    ) {
+      setSearchInput(kw);
+      setStatusInput(st);
+      setAdvInputs({
+        leaderVisa: ld, memberVisas: mb,
+        startDateFrom: sf, startDateTo: st2,
+        endDateFrom: ef, endDateTo: et,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (isInitialMountDebounce.current) { isInitialMountDebounce.current = false; return; }
     clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       const next = syncSearch();
@@ -143,7 +175,7 @@ export function useProjectList() {
   const renderSortIcon = (f) => (sortConfig?.field === f ? <span className="sort-caret">{sortConfig.direction === 'asc' ? '▲' : '▼'}</span> : null);
 
   return {
-    t, projects, groups, totalPages, currentPage, setCurrentPage, loading,
+    t, projects, groups, employees, totalPages, currentPage, setCurrentPage, loading,
     searchInput, setSearchInput, statusInput, setStatusInput, showAdvanced, setShowAdvanced,
     advInputs, handleAdvChange, selectedIds, modalConfig, setModalConfig, actionError,
     handleSearch, handleReset, isAllPageSelected, toggleSelectRow, toggleSelectAll,

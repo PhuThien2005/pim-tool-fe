@@ -34,7 +34,7 @@ export const projectService = {
     apiClient.delete(`/projects/${id}`).then((r) => r.data),
 
   deleteProjects: (ids = []) =>
-    apiClient.delete('/projects', { data: ids }).then((r) => r.data),
+    apiClient.request({ method: 'delete', url: '/projects', data: ids }).then((r) => r.data),
 
   getGroups: (pageable = { page: 0, size: 50, sort: 'id,asc' }) =>
     apiClient.get('/groups', { params: pageable }).then((r) => r.data?.content || r.data || []),

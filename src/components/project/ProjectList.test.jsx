@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { LanguageProvider } from '../../context/LanguageContext';
 import { ProjectProvider } from '../../context/ProjectContext';
@@ -29,10 +29,10 @@ describe('ProjectList Component Tests', () => {
     expect(screen.getByRole('button', { name: /Reset Search/i })).toBeInTheDocument();
   });
 
-  test('renders project rows and links', () => {
+  test('renders project rows and links', async () => {
     renderWithProviders(<ProjectList />);
     // Project 3116 is in the first page
-    const link = screen.getByRole('link', { name: '3116' });
+    const link = await screen.findByRole('link', { name: '3116' });
     expect(link).toBeInTheDocument();
     expect(link.getAttribute('href')).toBe('/project/edit/3116');
 
@@ -41,35 +41,41 @@ describe('ProjectList Component Tests', () => {
     expect(screen.getAllByText('Les Retaites Populaires').length).toBeGreaterThan(0);
   });
 
-  test('only projects with status NEW have delete trash icon', () => {
+  test('only projects with status NEW have delete trash icon', async () => {
     renderWithProviders(<ProjectList />);
     // 3116 has status NEW -> has delete button
-    expect(screen.getByLabelText('Delete project 3116')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Delete project 3116')).toBeInTheDocument();
 
     // 3118 has status FIN -> does NOT have delete button
     expect(screen.queryByLabelText('Delete project 3118')).not.toBeInTheDocument();
   });
 
-  test('filters projects by search keyword', () => {
+  test('filters projects by search keyword', async () => {
     renderWithProviders(<ProjectList />);
     const searchInput = screen.getByPlaceholderText(/Project number, name, customer name/i);
     const searchBtn = screen.getByRole('button', { name: /Search Project/i });
+
+    // Wait for initial data to load
+    await screen.findByRole('link', { name: '3116' });
 
     // Search for 7157
     fireEvent.change(searchInput, { target: { value: '7157' } });
     fireEvent.click(searchBtn);
 
-    expect(screen.getByRole('link', { name: '7157' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: '7157' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '3116' })).not.toBeInTheDocument();
 
     // Reset search
     const resetBtn = screen.getByRole('button', { name: /Reset Search/i });
     fireEvent.click(resetBtn);
-    expect(screen.getByRole('link', { name: '3116' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: '3116' })).toBeInTheDocument();
   });
 
-  test('selects multiple rows and displays selected count', () => {
+  test('selects multiple rows and displays selected count', async () => {
     renderWithProviders(<ProjectList />);
+    // Wait for data to load
+    await screen.findByLabelText('Select project 3116');
+
     const check3116 = screen.getByLabelText('Select project 3116');
     const check3118 = screen.getByLabelText('Select project 3118');
 
@@ -80,21 +86,27 @@ describe('ProjectList Component Tests', () => {
     expect(screen.getByText(/2 items selected/i)).toBeInTheDocument();
   });
 
-  test('toggles advanced filter section on button click', () => {
+  test('toggles advanced filter section on button click', async () => {
     renderWithProviders(<ProjectList />);
+    // Wait for data to load
+    await screen.findByRole('link', { name: '3116' });
+
     const advBtn = screen.getByRole('button', { name: /Advanced Filter/i });
-    expect(screen.queryByPlaceholderText(/e\.g\. DTH/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Group \(Leader Visa\)/i)).not.toBeInTheDocument();
 
     fireEvent.click(advBtn);
-    expect(screen.getByPlaceholderText(/e\.g\. DTH/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/e\.g\. BHU/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Group \(Leader Visa\)/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search employee visa or name/i)).toBeInTheDocument();
 
     fireEvent.click(advBtn);
-    expect(screen.queryByPlaceholderText(/e\.g\. DTH/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Group \(Leader Visa\)/i)).not.toBeInTheDocument();
   });
 
-  test('sorts table when column header is clicked', () => {
+  test('sorts table when column header is clicked', async () => {
     renderWithProviders(<ProjectList />);
+    // Wait for data to load
+    await screen.findByRole('link', { name: '3116' });
+
     const nameHeader = screen.getByText('Name');
     fireEvent.click(nameHeader);
     expect(nameHeader.querySelector('.sort-caret').textContent).toBe('▲');

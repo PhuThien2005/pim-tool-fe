@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from '../../context/LanguageContext';
 import { ProjectProvider } from '../../context/ProjectContext';
@@ -42,8 +42,13 @@ describe('ProjectForm Component Tests', () => {
     expect(screen.getByText(/Please enter all the mandatory fields \(\*\)\./i)).toBeInTheDocument();
   });
 
-  test('displays duplicate project number notice when number exists', () => {
+  test('displays duplicate project number notice when number exists', async () => {
     renderWithProviders(<ProjectForm isEdit={false} />);
+    
+    // Wait for groups to load so groupId is set, otherwise Zod validation fails
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Group/i).value).not.toBe('');
+    });
 
     fireEvent.change(screen.getByLabelText(/Project Number/i), { target: { value: '3116' } });
     fireEvent.change(screen.getByLabelText(/Project name/i), { target: { value: 'Test Project' } });
@@ -54,12 +59,17 @@ describe('ProjectForm Component Tests', () => {
     fireEvent.click(submitBtn);
 
     expect(
-      screen.getByText(/The project number already existed\. Please select a different project number/i)
+      await screen.findByText(/The project number already existed\. Please select a different project number/i)
     ).toBeInTheDocument();
   });
 
-  test('displays invalid visa error when non-existent visa is entered', () => {
+  test('displays invalid visa error when non-existent visa is entered', async () => {
     renderWithProviders(<ProjectForm isEdit={false} />);
+
+    // Wait for groups to load so groupId is set, otherwise Zod validation fails
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Group/i).value).not.toBe('');
+    });
 
     fireEvent.change(screen.getByLabelText(/Project Number/i), { target: { value: '9988' } });
     fireEvent.change(screen.getByLabelText(/Project name/i), { target: { value: 'Valid Project' } });
@@ -72,10 +82,10 @@ describe('ProjectForm Component Tests', () => {
     const submitBtn = screen.getByRole('button', { name: /Create Project/i });
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText(/The following visas do not exist: INVALID_VISA\./i)).toBeInTheDocument();
+    expect(await screen.findByText(/The following visas do not exist: INVALID_VISA\./i)).toBeInTheDocument();
   });
 
-  test('renders in edit mode with project number disabled', () => {
+  test('renders in edit mode with project number disabled', async () => {
     const renderEdit = () =>
       render(
         <BrowserRouter>
@@ -95,15 +105,21 @@ describe('ProjectForm Component Tests', () => {
     window.history.pushState({}, 'Edit Page', '/project/edit/3116');
     renderEdit();
 
-    expect(screen.getByText(/Edit Project information/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Edit Project information/i)).toBeInTheDocument();
     const numberInput = screen.getByLabelText(/Project Number/i);
     expect(numberInput).toBeDisabled();
     expect(numberInput.value).toBe('3116');
     expect(screen.getByRole('button', { name: /Edit Project/i })).toBeInTheDocument();
   });
 
-  test('displays group dropdown options formatted by leader visa', () => {
+  test('displays group dropdown options formatted by leader visa', async () => {
     renderWithProviders(<ProjectForm isEdit={false} />);
+    // Wait for groups to load asynchronously
+    await waitFor(() => {
+      const groupSelect = screen.getByLabelText(/Group/i);
+      const options = Array.from(groupSelect.querySelectorAll('option')).map((o) => o.textContent);
+      expect(options).toContain('DTH');
+    });
     const groupSelect = screen.getByLabelText(/Group/i);
     const options = Array.from(groupSelect.querySelectorAll('option')).map((o) => o.textContent);
     expect(options).toContain('DTH');
@@ -111,7 +127,7 @@ describe('ProjectForm Component Tests', () => {
     expect(options).toContain('JHV');
   });
 
-  test('loads project with 1:1 groupLeader visa and employees in edit mode', () => {
+  test('loads project with 1:1 groupLeader visa and employees in edit mode', async () => {
     const renderEdit = () =>
       render(
         <BrowserRouter>
@@ -131,10 +147,13 @@ describe('ProjectForm Component Tests', () => {
     window.history.pushState({}, 'Edit Page', '/project/edit/1004');
     renderEdit();
 
-    expect(screen.getByText(/Edit Project information/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Project name/i).value).toBe('IOC CLIENT EXTRANET');
+    expect(await screen.findByText(/Edit Project information/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Project name/i).value).toBe('IOC CLIENT EXTRANET');
+      const groupSelect = screen.getByLabelText(/Group/i);
+      expect(groupSelect.value).toBe('2');
+    });
     const groupSelect = screen.getByLabelText(/Group/i);
-    expect(groupSelect.value).toBe('2');
     expect(groupSelect.options[groupSelect.selectedIndex].text).toBe('BHU');
     expect(screen.getByPlaceholderText(/Search employee visa or name/i).value).toBe('HTV, TQP, QMV');
   });

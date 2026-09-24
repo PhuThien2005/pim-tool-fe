@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import { projectService } from './services/projectService';
 
@@ -17,6 +17,7 @@ describe('UAT User Journey Tests', () => {
     fireEvent.click(newProjectLink);
 
     expect(screen.getByText('New Project')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('combobox', { name: /Group/i })).toHaveValue('1'));
 
     // 2. Submit empty form -> error notice
     const createBtn = screen.getByRole('button', { name: /Create Project/i });
@@ -31,7 +32,7 @@ describe('UAT User Journey Tests', () => {
     fireEvent.click(createBtn);
 
     expect(
-      screen.getByText(/The project number already existed\. Please select a different project number/i)
+      await screen.findByText(/The project number already existed\. Please select a different project number/i)
     ).toBeInTheDocument();
 
     // 4. Change project number to unique 8899 and supply invalid visa -> error notice
@@ -40,7 +41,7 @@ describe('UAT User Journey Tests', () => {
     fireEvent.change(memberInput, { target: { value: 'INVALID_XYZ' } });
     fireEvent.click(createBtn);
 
-    expect(screen.getByText(/The following visas do not exist: INVALID_XYZ\./i)).toBeInTheDocument();
+    expect(await screen.findByText(/The following visas do not exist: INVALID_XYZ\./i)).toBeInTheDocument();
 
     // 5. Provide valid visa DTH, BHU and valid end date -> success
     fireEvent.change(memberInput, { target: { value: 'DTH, BHU' } });
@@ -48,11 +49,14 @@ describe('UAT User Journey Tests', () => {
     fireEvent.click(createBtn);
 
     // 6. Verified navigated back to Projects List
-    expect(screen.getByText('Projects List')).toBeInTheDocument();
+    expect(await screen.findByText('Projects List')).toBeInTheDocument();
   });
 
-  test('UAT Journey 2: Search criteria preservation when navigating back from Cancel', () => {
+  test('UAT Journey 2: Search criteria preservation when navigating back from Cancel', async () => {
     render(<App />);
+
+    // Wait for initial data to load
+    await screen.findByRole('link', { name: '3116' });
 
     // 1. Enter search term 'MGBAHN' and filter by status 'INP'
     const searchInput = screen.getByPlaceholderText(/Project number, name, customer name/i);
@@ -64,14 +68,14 @@ describe('UAT User Journey Tests', () => {
     fireEvent.click(searchBtn);
 
     // Only 7157 should appear
-    expect(screen.getByRole('link', { name: '7157' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: '7157' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '3116' })).not.toBeInTheDocument();
 
     // 2. Navigate to Edit project 7157
     const link7157 = screen.getByRole('link', { name: '7157' });
     fireEvent.click(link7157);
 
-    expect(screen.getByText('Edit Project information')).toBeInTheDocument();
+    expect(await screen.findByText('Edit Project information')).toBeInTheDocument();
     expect(screen.getByLabelText(/Project Number/i)).toBeDisabled();
 
     // 3. Click Cancel button
@@ -79,18 +83,20 @@ describe('UAT User Journey Tests', () => {
     fireEvent.click(cancelBtn);
 
     // 4. Returned to Projects List: Search input and status select must be preserved!
-    expect(screen.getByText('Projects List')).toBeInTheDocument();
+    expect(await screen.findByText('Projects List')).toBeInTheDocument();
     const returnedSearchInput = screen.getByPlaceholderText(/Project number, name, customer name/i);
     expect(returnedSearchInput.value).toBe('MGBAHN');
-    expect(screen.getByRole('link', { name: '7157' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: '7157' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '3116' })).not.toBeInTheDocument();
   });
 
-  test('UAT Journey 3: Deletion rule enforcement for status NEW only', () => {
+  test('UAT Journey 3: Deletion rule enforcement for status NEW only', async () => {
     render(<App />);
 
+    // Wait for data to load
+    const delete3116 = await screen.findByLabelText('Delete project 3116');
+
     // Single deletion: Project 3116 is status NEW -> trash icon exists
-    const delete3116 = screen.getByLabelText('Delete project 3116');
     fireEvent.click(delete3116);
 
     // Modal appears
@@ -100,7 +106,9 @@ describe('UAT User Journey Tests', () => {
     const confirmBtn = screen.getByRole('button', { name: /Confirm/i });
     fireEvent.click(confirmBtn);
 
-    // Project 3116 should be removed
-    expect(screen.queryByRole('link', { name: '3116' })).not.toBeInTheDocument();
+    // Project 3116 should be removed (deletion is async)
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name: '3116' })).not.toBeInTheDocument();
+    });
   });
 });
