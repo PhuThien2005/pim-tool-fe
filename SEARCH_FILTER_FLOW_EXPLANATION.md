@@ -2,11 +2,10 @@
 
 Tài liệu này giải thích chi tiết (từng dòng/từng khối code quan trọng) về cách tính năng **Tìm kiếm (Search)** và **Lọc nâng cao (Advanced Filter)** hoạt động trong PIM Tool Frontend. 
 
-Luồng này không nằm gọn trong 1 file mà luân chuyển qua lại giữa các file theo thứ tự:
+Luồng này luân chuyển giữa các phần theo thứ tự:
 1. **Khởi tạo trạng thái ban đầu từ URL** (`ProjectContext.jsx`)
-2. **Hiển thị giao diện và nhận tương tác từ người dùng** (`ProjectList.jsx`)
-3. **Xử lý logic, đồng bộ State và URL** (`useProjectList.jsx`)
-4. **Kích hoạt gọi API khi State thay đổi** (`ProjectContext.jsx` & `projectService.jsx`)
+2. **Hiển thị giao diện & xử lý logic, đồng bộ State/URL trực tiếp** (`ProjectList.jsx`)
+3. **Kích hoạt gọi API khi State thay đổi** (`ProjectContext.jsx` & `projectService.jsx`)
 
 Dưới đây là phần giải thích đan xen theo trình tự luồng dữ liệu (Data Flow) thực tế.
 
