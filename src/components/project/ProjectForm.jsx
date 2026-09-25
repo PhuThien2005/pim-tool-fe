@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -49,7 +49,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const [errorFields, setErrorFields] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, setValue, watch, reset } = useForm({
+  const { setValue, watch, reset } = useForm({
     defaultValues: {
       projectNumber: '',
       name: '',
