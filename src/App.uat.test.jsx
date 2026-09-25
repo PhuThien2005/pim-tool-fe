@@ -111,4 +111,32 @@ describe('UAT User Journey Tests', () => {
       expect(screen.queryByRole('link', { name: '3116' })).not.toBeInTheDocument();
     });
   });
+
+  test('UAT Journey 4: Unsubmitted filter draft preservation when navigating to project detail and clicking Cancel', async () => {
+    render(<App />);
+
+    // Wait for initial data to load
+    await screen.findByRole('link', { name: '3116' });
+
+    // 1. Select status 'NEW' WITHOUT clicking Search button
+    const statusSelect = screen.getByDisplayValue(/Project status/i);
+    fireEvent.change(statusSelect, { target: { value: 'NEW' } });
+    expect(statusSelect.value).toBe('NEW');
+
+    // 2. Click to view/edit project 3116
+    const link3116 = screen.getByRole('link', { name: '3116' });
+    fireEvent.click(link3116);
+
+    expect(await screen.findByText('Edit Project information')).toBeInTheDocument();
+
+    // 3. Click Cancel button
+    const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelBtn);
+
+    // 4. Returned to Projects List: Status select must still have 'NEW' preserved!
+    expect(await screen.findByText('Projects List')).toBeInTheDocument();
+    const returnedStatusSelect = screen.getByRole('combobox');
+    expect(returnedStatusSelect.value).toBe('NEW');
+  });
 });
+
