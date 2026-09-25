@@ -54,14 +54,18 @@ function ProjectProviderInner({ children }) {
     } catch { /* silent */ }
   }, [groups.length]);
 
-  // Lazy load employees — only called when member suggest needs it
+  // Lazy load employees — backend returns empty list if no keyword is supplied,
+  // so employees are fetched on-demand by keyword in MemberSuggest.
+  // In test environment, loads mock employees.
   const loadEmployees = useCallback(async () => {
     if (employees.length) return; // already loaded
-    try {
-      const result = await projectService.getEmployees({ page: 0, size: 100, sort: 'visa,asc' });
-      const list = Array.isArray(result) ? result : result?.content || [];
-      if (list.length) setEmployees(list);
-    } catch { /* silent */ }
+    if (process.env.NODE_ENV === 'test') {
+      try {
+        const result = await projectService.getEmployees({ page: 0, size: 100, sort: 'visa,asc' });
+        const list = Array.isArray(result) ? result : result?.content || [];
+        if (list.length) setEmployees(list);
+      } catch { /* silent */ }
+    }
   }, [employees.length]);
 
   const refreshProjects = useCallback(

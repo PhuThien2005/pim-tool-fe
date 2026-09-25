@@ -7,5 +7,5 @@ export default function ProjectCreateEditPage() {
   const editId = id || projectNumber;
   const isEdit = Boolean(editId);
 
-  return <ProjectForm isEdit={isEdit} projectId={editId} />;
+  return <ProjectForm key={editId ? `edit-${editId}` : 'new'} isEdit={isEdit} projectId={editId} />;
 }

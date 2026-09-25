@@ -58,11 +58,10 @@ export default function ProjectList() {
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    if (showAdvanced) {
-      if (!groups.length) loadGroups();
-      if (!employees.length) loadEmployees();
+    if (showAdvanced && !groups.length) {
+      loadGroups();
     }
-  }, [showAdvanced, groups.length, loadGroups, employees.length, loadEmployees]);
+  }, [showAdvanced, groups.length, loadGroups]);
 
   const updateUrlParams = (c) => {
     const params = Object.fromEntries(Object.entries(c).filter(([_, v]) => Boolean(v)));

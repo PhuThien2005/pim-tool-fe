@@ -40,10 +40,9 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const navigate = useNavigate();
   const params = useParams();
   const targetId = propProjectId || params.id || params.projectNumber;
-  const { groups, employees, createProject, updateProject, getProjectById, loadGroups, loadEmployees } = useProjects();
+  const { groups, employees, createProject, updateProject, getProjectById, loadGroups } = useProjects();
 
   useEffect(() => { loadGroups(); }, [loadGroups]);
-  useEffect(() => { loadEmployees(); }, [loadEmployees]);
 
   const [errorMessage, setErrorMessage] = useState('');
   const [errorFields, setErrorFields] = useState({});
@@ -69,7 +68,26 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const projectIdRef = useRef(null);
 
   useEffect(() => {
-    if (!isEdit || !targetId) return;
+    if (!isEdit) {
+      projectIdRef.current = null;
+      setProjectEmployees([]);
+      setErrorFields({});
+      setErrorMessage('');
+      reset({
+        projectNumber: '',
+        name: '',
+        customer: '',
+        groupId: groups[0]?.id ? String(groups[0].id) : '',
+        members: '',
+        status: 'NEW',
+        startDate: '',
+        endDate: '',
+        version: 1,
+      });
+      return;
+    }
+
+    if (!targetId) return;
     let isMounted = true;
 
     (async () => {
@@ -83,6 +101,8 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         if (proj.employees) {
           const empList = Array.isArray(proj.employees) ? proj.employees : Array.from(proj.employees);
           setProjectEmployees(empList);
+        } else {
+          setProjectEmployees([]);
         }
 
         const members = (proj.employees || proj.members || [])
@@ -108,7 +128,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     })();
 
     return () => { isMounted = false; };
-  }, [isEdit, targetId, getProjectById, reset, navigate]);
+  }, [isEdit, targetId, getProjectById, reset, navigate, groups]);
 
   useEffect(() => {
     if (!isEdit && groups.length && !formData.groupId) setValue('groupId', String(groups[0].id));
