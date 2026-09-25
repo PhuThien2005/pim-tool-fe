@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import logo from '../../assets/images/logo_elca.png';
 
@@ -7,10 +8,10 @@ export default function Header() {
 
   return (
     <header className="pim-header">
-      <div className="header-left">
+      <Link to="/" className="header-left" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
         <img src={logo} alt="ELCA Logo" className="header-logo" />
         <h1 className="header-title">{t('header.title')}</h1>
-      </div>
+      </Link>
 
       <div className="header-right">
         <div className="lang-switch">

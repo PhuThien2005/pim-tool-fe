@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Pagination from '../common/Pagination';
 import ConfirmModal from '../common/ConfirmModal';
@@ -27,7 +27,7 @@ const ADV_FIELDS = [
 const ADV_KEYS = ADV_FIELDS.map((f) => f.key);
 
 export default function ProjectList() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     projects, totalPages, searchCriteria, setSearchCriteria, resetSearch,
@@ -55,7 +55,11 @@ export default function ProjectList() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [modalConfig, setModalConfig] = useState({ isOpen: false, ids: [], message: '' });
   const [actionError, setActionError] = useState('');
-  const isInitialMount = useRef(true);
+
+  // Dismiss action error when language changes
+  useEffect(() => {
+    setActionError('');
+  }, [language]);
 
   useEffect(() => {
     if (showAdvanced && !groups.length) {
@@ -64,8 +68,10 @@ export default function ProjectList() {
   }, [showAdvanced, groups.length, loadGroups]);
 
   const updateUrlParams = (c) => {
-    const params = Object.fromEntries(Object.entries(c).filter(([_, v]) => Boolean(v)));
-    setSearchParams(params, { replace: true });
+    const params = Object.fromEntries(
+      Object.entries(c).filter(([_, v]) => Boolean(v && String(v).trim()))
+    );
+    setSearchParams(params, { replace: false });
   };
 
   const syncSearch = () => ({
@@ -83,11 +89,37 @@ export default function ProjectList() {
     ),
   });
 
+  // Two-way synchronization with URL searchParams (supports Browser Back/Forward and Cancel preservation)
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      const needsSync = (!urlKw && initialSearch) || (!urlSt && initialStatus) || ADV_KEYS.some((k) => !searchParams.get(k) && initialAdv[k]);
-      if (needsSync) updateUrlParams({ keyword: initialSearch, status: initialStatus, ...initialAdv });
+    const hasUrlParams = Boolean(
+      searchParams.get('keyword') ||
+      searchParams.get('searchTerm') ||
+      searchParams.get('search') ||
+      searchParams.get('status') ||
+      ADV_KEYS.some((k) => searchParams.get(k))
+    );
+
+    const hasContextCriteria = Boolean(
+      searchCriteria.keyword ||
+      searchCriteria.searchTerm ||
+      searchCriteria.status ||
+      ADV_KEYS.some((k) => searchCriteria[k])
+    );
+
+    // If returning to / with no URL params but search was active (e.g. Cancel button), restore criteria
+    if (!hasUrlParams && hasContextCriteria) {
+      const restoredKw = searchCriteria.keyword || searchCriteria.searchTerm || '';
+      const restoredSt = searchCriteria.status || '';
+      const restoredAdv = Object.fromEntries(
+        ADV_KEYS.map((k) => [k, searchCriteria[k] || ''])
+      );
+      setSearchInput(restoredKw);
+      setStatusInput(restoredSt);
+      setAdvInputs(restoredAdv);
+      if (Object.values(restoredAdv).some(Boolean)) {
+        setShowAdvanced(true);
+      }
+      updateUrlParams({ keyword: restoredKw, status: restoredSt, ...restoredAdv });
       return;
     }
 
@@ -97,18 +129,18 @@ export default function ProjectList() {
       ADV_KEYS.map((k) => [k, searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || ''])
     );
 
-    const isDifferent = kw !== searchInput || st !== statusInput || ADV_KEYS.some((k) => currentAdv[k] !== advInputs[k]);
-
-    if (isDifferent) {
-      setSearchInput(kw);
-      setStatusInput(st);
-      setAdvInputs(currentAdv);
-      setSearchCriteria({
-        keyword: kw.trim(),
-        status: st,
-        ...currentAdv
-      });
+    setSearchInput(kw);
+    setStatusInput(st);
+    setAdvInputs(currentAdv);
+    if (Object.values(currentAdv).some(Boolean)) {
+      setShowAdvanced(true);
     }
+
+    setSearchCriteria({
+      keyword: kw.trim(),
+      status: st,
+      ...currentAdv
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 

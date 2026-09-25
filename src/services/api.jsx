@@ -20,6 +20,14 @@ apiClient.interceptors.request.use((config) => {
   if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase())) {
     config.headers['Content-Type'] = 'application/json';
   }
+
+  // Strip empty string, null, and undefined query params (TC-ADV-04 Clean Params Rule)
+  if (config.params && typeof config.params === 'object' && !Array.isArray(config.params)) {
+    config.params = Object.fromEntries(
+      Object.entries(config.params).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+    );
+  }
+
   return config;
 });
 

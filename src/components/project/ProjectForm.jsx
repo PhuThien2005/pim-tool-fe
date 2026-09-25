@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import MemberSuggest from './MemberSuggest';
 import LocaleDatePicker from '../common/LocaleDatePicker';
-import { useTranslate } from '../../context/LanguageContext';
+import { useTranslate, useLanguage } from '../../context/LanguageContext';
 import { useProjects } from '../../context/ProjectContext';
 
 const projectSchema = z
@@ -37,6 +37,7 @@ const FormRow = ({ label, required, htmlFor, children, width }) => (
 
 export default function ProjectForm({ isEdit = false, projectId: propProjectId }) {
   const t = useTranslate();
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const params = useParams();
   const targetId = propProjectId || params.id || params.projectNumber;
@@ -46,6 +47,11 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const [errorFields, setErrorFields] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [projectEmployees, setProjectEmployees] = useState([]);
+
+  // Dismiss error message on language change
+  useEffect(() => {
+    setErrorMessage('');
+  }, [language]);
 
   const { setValue, watch, reset } = useForm({
     defaultValues: {
@@ -128,7 +134,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     })();
 
     return () => { isMounted = false; };
-  }, [isEdit, targetId, getProjectById, reset, navigate, groups]);
+  }, [isEdit, targetId, getProjectById, reset, navigate, groups, loadGroups]);
 
   useEffect(() => {
     if (!isEdit && groups.length && !formData.groupId) setValue('groupId', String(groups[0].id));

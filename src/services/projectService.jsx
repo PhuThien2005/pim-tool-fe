@@ -14,9 +14,14 @@ const toPayload = (d) => ({
     .filter(Boolean),
 });
 
+const cleanParams = (params = {}) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+  );
+
 export const projectService = {
   searchProjects: (criteria = {}, pageable = {}) =>
-    apiClient.get('/projects', { params: { ...criteria, ...pageable } }).then((r) => r.data),
+    apiClient.get('/projects', { params: cleanParams({ ...criteria, ...pageable }) }).then((r) => r.data),
 
   getProjectByNumber: (num) =>
     apiClient.get(`/projects/${num}`).then((r) => r.data),
