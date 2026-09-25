@@ -14,7 +14,7 @@ Dưới đây là phần giải thích đan xen theo trình tự luồng dữ li
 ## 1. Khởi tạo Trạng thái (State) từ URL 
 *(File: `src/context/ProjectContext.jsx`)*
 
-Khi ứng dụng vừa load, bước đầu tiên là phải "đọc" xem trên thanh địa chỉ URL có đang chứa tham số tìm kiếm nào không (ví dụ: `?searchTerm=abc&status=NEW`).
+Khi ứng dụng vừa load, bước đầu tiên là phải "đọc" xem trên thanh địa chỉ URL có đang chứa tham số tìm kiếm nào không (ví dụ: `?keyword=abc&status=NEW`).
 
 ```javascript
 // Khởi tạo đối tượng searchParams từ URL hiện tại của trình duyệt
@@ -23,7 +23,7 @@ const searchParams = new URLSearchParams(window.location.search);
 // Tạo ra một object lưu trữ các tiêu chí tìm kiếm mặc định lúc mới vào trang
 const initialCriteriaFromUrl = {
   // Lấy giá trị 'keyword', 'searchTerm' hoặc 'search' từ URL. Nếu không có thì để rỗng ''
-  searchTerm: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
+  keyword: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
   
   // Trạng thái dự án (status), viết hoa toàn bộ để đồng bộ với backend (VD: 'NEW', 'INP')
   status: (searchParams.get('status') || '').toUpperCase(),

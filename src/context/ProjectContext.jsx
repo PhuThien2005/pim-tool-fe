@@ -5,7 +5,7 @@ import { projectService } from '../services/projectService';
 const ProjectContext = createContext();
 
 const initialCriteria = {
-  searchTerm: '', status: '', leaderVisa: '', memberVisa: '',
+  keyword: '', status: '', leaderVisa: '', memberVisas: '',
   startDateFrom: '', startDateTo: '', endDateFrom: '', endDateTo: '',
 };
 
@@ -19,7 +19,7 @@ function ProjectProviderInner({ children }) {
   const queryClient = useQueryClient();
   const searchParams = new URLSearchParams(window.location.search);
   const initialCriteriaFromUrl = {
-    searchTerm: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
+    keyword: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
     status: (searchParams.get('status') || '').toUpperCase(),
     leaderVisa: searchParams.get('leaderVisa') || '',
     memberVisas: (searchParams.get('memberVisas') || searchParams.get('memberVisa') || '').replace(/\s*,\s*/g, ','),

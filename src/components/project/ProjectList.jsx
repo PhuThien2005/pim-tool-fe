@@ -37,7 +37,7 @@ export default function ProjectList() {
 
   const urlKw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
   const urlSt = (searchParams.get('status') || '').toUpperCase();
-  const initialSearch = urlKw || searchCriteria.searchTerm || '';
+  const initialSearch = urlKw || searchCriteria.keyword || searchCriteria.searchTerm || '';
   const initialStatus = urlSt || searchCriteria.status || '';
 
   const initialAdv = Object.fromEntries(
@@ -72,7 +72,7 @@ export default function ProjectList() {
   };
 
   const syncSearch = () => ({
-    searchTerm: searchInput.trim(),
+    keyword: searchInput.trim(),
     status: (statusInput || '').toUpperCase(),
     ...Object.fromEntries(
       Object.entries(advInputs).map(([k, v]) => [
@@ -90,11 +90,11 @@ export default function ProjectList() {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       const needsSync = (!urlKw && initialSearch) || (!urlSt && initialStatus) || ADV_KEYS.some((k) => !searchParams.get(k) && initialAdv[k]);
-      if (needsSync) updateUrlParams({ searchTerm: initialSearch, status: initialStatus, ...initialAdv });
+      if (needsSync) updateUrlParams({ keyword: initialSearch, status: initialStatus, ...initialAdv });
       return;
     }
 
-    const kw = searchParams.get('searchTerm') || searchParams.get('keyword') || searchParams.get('search') || '';
+    const kw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
     const st = (searchParams.get('status') || '').toUpperCase();
     const currentAdv = Object.fromEntries(
       ADV_KEYS.map((k) => [k, searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || ''])
