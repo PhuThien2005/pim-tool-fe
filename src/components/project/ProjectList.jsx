@@ -237,7 +237,7 @@ export default function ProjectList() {
                     <td className="col-checkbox">
                       <input type="checkbox" className="pim-checkbox" checked={selectedIds.includes(id)} onChange={() => toggleSelectRow(id)} aria-label={`Select project ${p.projectNumber}`} />
                     </td>
-                    <td className="col-number"><Link to={`/project/edit/${p.projectNumber}`} className="project-number-link">{p.projectNumber}</Link></td>
+                    <td className="col-number"><Link to={`/project/edit/${p.id || p.projectNumber}`} className="project-number-link">{p.projectNumber}</Link></td>
                     <td className="col-name">{p.name}</td>
                     <td className="col-status">{t(`status.${p.status}`)}</td>
                     <td className="col-customer">{p.customer}</td>

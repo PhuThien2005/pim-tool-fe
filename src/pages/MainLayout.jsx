@@ -22,7 +22,7 @@ export default function MainLayout() {
             <Route path="/" element={<ProjectListPage />} />
             <Route path="/projects" element={<ProjectListPage />} />
             <Route path="/project/new" element={<ProjectCreateEditPage />} />
-            <Route path="/create-project" element={<ProjectCreateEditPage />} />
+            <Route path="/project/edit/:id" element={<ProjectCreateEditPage />} />
             <Route path="/project/edit/:projectNumber" element={<ProjectCreateEditPage />} />
             <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

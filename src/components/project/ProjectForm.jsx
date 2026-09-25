@@ -35,11 +35,12 @@ const FormRow = ({ label, required, htmlFor, children, width }) => (
   </div>
 );
 
-export default function ProjectForm({ isEdit = false }) {
+export default function ProjectForm({ isEdit = false, projectId: propProjectId }) {
   const t = useTranslate();
   const navigate = useNavigate();
-  const { projectNumber } = useParams();
-  const { groups, employees, createProject, updateProject, getProjectByNumber, loadGroups, loadEmployees } = useProjects();
+  const params = useParams();
+  const targetId = propProjectId || params.id || params.projectNumber;
+  const { groups, employees, createProject, updateProject, getProjectById, loadGroups, loadEmployees } = useProjects();
 
   useEffect(() => { loadGroups(); }, [loadGroups]);
   useEffect(() => { loadEmployees(); }, [loadEmployees]);
@@ -67,25 +68,41 @@ export default function ProjectForm({ isEdit = false }) {
   const projectIdRef = useRef(null);
 
   useEffect(() => {
-    if (!isEdit || !projectNumber) return;
-    const proj = getProjectByNumber(projectNumber);
-    if (!proj) return navigate('/error?detail=Project+not+found', { replace: true });
+    if (!isEdit || !targetId) return;
+    let isMounted = true;
 
-    projectIdRef.current = proj.id || proj.projectNumber; // fallback to projectNumber if id is missing
+    (async () => {
+      try {
+        const proj = await getProjectById(targetId);
+        if (!isMounted) return;
+        if (!proj) return navigate('/error?detail=Project+not+found', { replace: true });
 
-    const members = (proj.employees || proj.members || []).map((m) => (typeof m === 'string' ? m : m.visa)).join(', ') || proj.members || '';
-    reset({
-      projectNumber: String(proj.projectNumber),
-      name: proj.name || '',
-      customer: proj.customer || '',
-      groupId: String(proj.group?.id || proj.groupId || ''),
-      members,
-      status: (proj.status || 'NEW').toUpperCase(),
-      startDate: proj.startDate || '',
-      endDate: proj.endDate || '',
-      version: proj.version ?? 1,
-    });
-  }, [isEdit, projectNumber, getProjectByNumber, reset, navigate]);
+        projectIdRef.current = proj.id ?? targetId;
+
+        const members = (proj.employees || proj.members || [])
+          .map((m) => (typeof m === 'string' ? m : m.visa))
+          .filter(Boolean)
+          .join(', ') || (typeof proj.members === 'string' ? proj.members : '');
+
+        reset({
+          projectNumber: String(proj.projectNumber ?? ''),
+          name: proj.name || '',
+          customer: proj.customer || '',
+          groupId: String(proj.group?.id || proj.groupId || ''),
+          members,
+          status: (proj.status || 'NEW').toUpperCase(),
+          startDate: proj.startDate || '',
+          endDate: proj.endDate || '',
+          version: proj.version ?? 1,
+        });
+      } catch (err) {
+        if (!isMounted) return;
+        navigate(`/error?detail=${encodeURIComponent(err.message || 'Project not found')}`, { replace: true });
+      }
+    })();
+
+    return () => { isMounted = false; };
+  }, [isEdit, targetId, getProjectById, reset, navigate]);
 
   useEffect(() => {
     if (!isEdit && groups.length && !formData.groupId) setValue('groupId', String(groups[0].id));

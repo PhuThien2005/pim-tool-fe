@@ -106,9 +106,11 @@ describe('ProjectForm Component Tests', () => {
     renderEdit();
 
     expect(await screen.findByText(/Edit Project information/i)).toBeInTheDocument();
-    const numberInput = screen.getByLabelText(/Project Number/i);
-    expect(numberInput).toBeDisabled();
-    expect(numberInput.value).toBe('3116');
+    await waitFor(() => {
+      const numberInput = screen.getByLabelText(/Project Number/i);
+      expect(numberInput).toBeDisabled();
+      expect(numberInput.value).toBe('3116');
+    });
     expect(screen.getByRole('button', { name: /Edit Project/i })).toBeInTheDocument();
   });
 

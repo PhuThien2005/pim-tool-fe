@@ -94,6 +94,10 @@ function ProjectProviderInner({ children }) {
     return res;
   }, [refreshProjects]);
 
+  const getProjectById = useCallback(async (id) => {
+    return projectService.getProjectById(id);
+  }, []);
+
   const getProjectByNumber = useCallback((num) => {
     return (pageResult.content || []).find((p) => p.projectNumber === +num || p.id === +num) || null;
   }, [pageResult.content]);
@@ -116,7 +120,7 @@ function ProjectProviderInner({ children }) {
           }));
         },
         createProject, updateProject, deleteProject, deleteProjects,
-        getProjectByNumber, refreshProjects,
+        getProjectById, getProjectByNumber, refreshProjects,
       }}
     >
       {children}

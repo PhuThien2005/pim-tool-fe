@@ -61,7 +61,7 @@ export const projectService = {
   getGroups: () => Promise.resolve(store.g),
   getEmployees: () => Promise.resolve(store.e),
   getProjectByNumber: (num) => store.p.find((p) => p.projectNumber === +num) || null,
-  getProjectById: (id) => store.p.find((p) => p.id === +id) || null,
+  getProjectById: (id) => Promise.resolve(store.p.find((p) => p.id === +id || p.projectNumber === +id) || null),
 
   searchProjects: (criteria, pageable) => Promise.resolve(_searchSync(criteria, pageable)),
 
