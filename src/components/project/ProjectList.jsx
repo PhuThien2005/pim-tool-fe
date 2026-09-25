@@ -32,7 +32,7 @@ export default function ProjectList() {
   const {
     projects, totalPages, searchCriteria, setSearchCriteria, resetSearch,
     sortConfig, toggleSort, currentPage, setCurrentPage, deleteProject,
-    deleteProjects, loading, groups, loadGroups, employees, loadEmployees
+    deleteProjects, loading, groups, loadGroups, employees
   } = useProjects();
 
   const urlKw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
