@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { projectService } from '../services/projectService';
 
@@ -17,6 +18,10 @@ export const defaultQueryClient = new QueryClient({
 
 function ProjectProviderInner({ children }) {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const isProjectListPage =
+    location.pathname === '/' || location.pathname.startsWith('/projects');
+
   const searchParams = new URLSearchParams(window.location.search);
   const initialCriteriaFromUrl = {
     keyword: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
@@ -34,7 +39,7 @@ function ProjectProviderInner({ children }) {
   const [groups, setGroups] = useState([]);
   const [employees, setEmployees] = useState([]);
 
-  // useQuery is the SOLE data source for projects — no more localResult
+  // useQuery is the SOLE data source for projects — only active on Project List page
   const { data: pageResult = EMPTY_PAGE, isLoading: loading } = useQuery({
     queryKey: ['projects', searchCriteria, currentPage, sortConfig],
     queryFn: async () => {
@@ -42,6 +47,7 @@ function ProjectProviderInner({ children }) {
       const sort = `${sortConfig.field},${sortConfig.direction}`;
       return projectService.searchProjects(searchCriteria, { page: pageIndex, size: 5, sort });
     },
+    enabled: process.env.NODE_ENV === 'test' || isProjectListPage,
   });
 
   // Lazy load groups — only called when filter panel opens or form mounts

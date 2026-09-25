@@ -42,8 +42,6 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const targetId = propProjectId || params.id || params.projectNumber;
   const { groups, employees, createProject, updateProject, getProjectById, loadGroups } = useProjects();
 
-  useEffect(() => { loadGroups(); }, [loadGroups]);
-
   const [errorMessage, setErrorMessage] = useState('');
   const [errorFields, setErrorFields] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +67,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
 
   useEffect(() => {
     if (!isEdit) {
+      loadGroups();
       projectIdRef.current = null;
       setProjectEmployees([]);
       setErrorFields({});
@@ -96,6 +95,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         if (!isMounted) return;
         if (!proj) return navigate('/error?detail=Project+not+found', { replace: true });
 
+        loadGroups();
         projectIdRef.current = proj.id ?? targetId;
 
         if (proj.employees) {
