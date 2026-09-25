@@ -58,7 +58,7 @@ function ProjectProviderInner({ children }) {
   const loadEmployees = useCallback(async () => {
     if (employees.length) return; // already loaded
     try {
-      const result = await projectService.getEmployees({ page: 0, size: 50, sort: 'visa,asc' });
+      const result = await projectService.getEmployees({ page: 0, size: 100, sort: 'visa,asc' });
       const list = Array.isArray(result) ? result : result?.content || [];
       if (list.length) setEmployees(list);
     } catch { /* silent */ }

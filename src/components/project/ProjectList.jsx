@@ -56,8 +56,6 @@ export default function ProjectList() {
   const [modalConfig, setModalConfig] = useState({ isOpen: false, ids: [], message: '' });
   const [actionError, setActionError] = useState('');
   const isInitialMount = useRef(true);
-  const isInitialMountDebounce = useRef(true);
-  const debounceTimer = useRef();
 
   useEffect(() => {
     if (showAdvanced) {
@@ -106,27 +104,19 @@ export default function ProjectList() {
       setSearchInput(kw);
       setStatusInput(st);
       setAdvInputs(currentAdv);
+      setSearchCriteria({
+        keyword: kw.trim(),
+        status: st,
+        ...currentAdv
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  useEffect(() => {
-    if (isInitialMountDebounce.current) { isInitialMountDebounce.current = false; return; }
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      const next = syncSearch();
-      setSearchCriteria(next);
-      updateUrlParams(next);
-    }, 350);
-    return () => clearTimeout(debounceTimer.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput, statusInput, advInputs]);
 
   const handleAdvChange = (f, v) => setAdvInputs((prev) => ({ ...prev, [f]: v }));
 
   const handleSearch = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    clearTimeout(debounceTimer.current);
     setActionError('');
     const next = syncSearch();
     setSearchCriteria(next);
@@ -136,7 +126,6 @@ export default function ProjectList() {
 
   const handleReset = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    clearTimeout(debounceTimer.current);
     setSearchInput('');
     setStatusInput('');
     setAdvInputs(Object.fromEntries(ADV_KEYS.map((k) => [k, ''])));

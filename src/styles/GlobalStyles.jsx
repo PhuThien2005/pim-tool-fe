@@ -883,12 +883,14 @@ export default function GlobalStyles() {
         align-items: center;
         gap: 32px;
         width: 100%;
+        height: 32px;
       }
 
       .date-group {
         display: flex;
         align-items: center;
         gap: 16px;
+        height: 32px;
       }
 
       .date-label {
@@ -897,6 +899,13 @@ export default function GlobalStyles() {
         font-weight: 600;
         color: var(--text-muted);
         white-space: nowrap;
+        margin: 0 !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+        line-height: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
       }
 
       .form-actions-row {
@@ -910,7 +919,10 @@ export default function GlobalStyles() {
       /* Locale Datepicker Styles */
       .locale-datepicker-container {
         position: relative;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        height: 32px;
       }
 
       .locale-datepicker-wrapper {

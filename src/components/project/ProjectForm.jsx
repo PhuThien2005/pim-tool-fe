@@ -48,6 +48,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const [errorMessage, setErrorMessage] = useState('');
   const [errorFields, setErrorFields] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [projectEmployees, setProjectEmployees] = useState([]);
 
   const { setValue, watch, reset } = useForm({
     defaultValues: {
@@ -78,6 +79,11 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         if (!proj) return navigate('/error?detail=Project+not+found', { replace: true });
 
         projectIdRef.current = proj.id ?? targetId;
+
+        if (proj.employees) {
+          const empList = Array.isArray(proj.employees) ? proj.employees : Array.from(proj.employees);
+          setProjectEmployees(empList);
+        }
 
         const members = (proj.employees || proj.members || [])
           .map((m) => (typeof m === 'string' ? m : m.visa))
@@ -173,9 +179,17 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
           <button type="button" className="error-banner-close" onClick={() => setErrorMessage('')} title="Close">✕</button>
         </div>
       )}
-      <form onSubmit={handleSubmit} className="pim-form-body">
-        {renderTextRow('projectNumber', 'projectNumber', 'projectNumber', undefined, 'input-sm', 'number', {
-          min: '1', max: '9999', disabled: isEdit, placeholder: 'e.g. 1001', className: isEdit ? 'readonly-field' : '',
+      <form onSubmit={handleSubmit} className="pim-form-body" noValidate>
+        {renderTextRow('projectNumber', 'projectNumber', 'projectNumber', undefined, 'input-sm', 'text', {
+          inputMode: 'numeric',
+          pattern: '[0-9]*',
+          disabled: isEdit,
+          placeholder: 'e.g. 1001',
+          className: isEdit ? 'readonly-field' : '',
+          onKeyDown: (e) => {
+            if (['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+          },
         })}
         {renderTextRow('projectName', 'name', 'projectName', '50')}
         {renderTextRow('customer', 'customer', 'customer', '50')}
@@ -193,7 +207,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         </FormRow>
 
         <FormRow label={t('projectForm.members')} width="480px">
-          <MemberSuggest value={formData.members} onChange={(v) => handleChange('members', v)} employees={employees} hasError={errorFields.members} />
+          <MemberSuggest value={formData.members} onChange={(v) => handleChange('members', v)} employees={employees} initialEmployees={projectEmployees} hasError={errorFields.members} />
         </FormRow>
 
         <FormRow label={t('projectForm.status')} required htmlFor="status">
