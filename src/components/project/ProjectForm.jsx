@@ -166,12 +166,48 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
       setIsSubmitting(false);
       if (err.status >= 500) return navigate(`/error?detail=${encodeURIComponent(err.message || 'Error')}`);
       const code = err.errorCode || err.code;
-      const isDup = code === 'DUPLICATE_NUMBER' || code === 'PROJECT_NUMBER_ALREADY_EXISTS';
-      const isVisa = code === 'INVALID_VISAS' || code === 'VISA_NOT_FOUND';
-      const isDate = code === 'INVALID_END_DATE';
-      const field = isDup ? 'projectNumber' : isVisa ? 'members' : isDate ? 'endDate' : '';
-      if (field) setErrorFields((prev) => ({ ...prev, [field]: true }));
-      setErrorMessage(isDup ? t('projectForm.duplicateNumber') : isDate ? t('projectForm.invalidEndDate') : err.message || t('common.unexpectedError'));
+      const isDup = code === 'DUPLICATE_NUMBER' || code === 'PROJECT_NUMBER_ALREADY_EXISTS' || Boolean(err.errors?.projectNumber);
+      const isVisa = code === 'INVALID_VISAS' || code === 'VISA_NOT_FOUND' || Boolean(err.errors?.visas);
+      const isDate = code === 'INVALID_END_DATE' || Boolean(err.errors?.endDate || err.errors?.startDate);
+
+      const nextErrFields = {};
+      if (isDup) nextErrFields.projectNumber = true;
+      if (isVisa) nextErrFields.members = true;
+      if (isDate) nextErrFields.endDate = true;
+
+      if (err.errors) {
+        Object.keys(err.errors).forEach((k) => {
+          const mappedKey = k === 'visas' ? 'members' : k;
+          nextErrFields[mappedKey] = true;
+        });
+      }
+      setErrorFields((prev) => ({ ...prev, ...nextErrFields }));
+
+      let msg = err.message || t('common.unexpectedError');
+      if (isDup) {
+        msg = t('projectForm.duplicateNumber');
+      } else if (isDate) {
+        msg = t('projectForm.invalidEndDate');
+      } else if (isVisa) {
+        if ((code === 'VISA_NOT_FOUND' || code === 'INVALID_VISAS') && err.message) {
+          msg = err.message;
+        } else {
+          const enteredVisas = (formData.members || '')
+            .split(',')
+            .map((v) => v.trim())
+            .filter(Boolean);
+          const invalidFormatVisas = enteredVisas.filter((v) => !/^[A-Za-z]{3}$/.test(v));
+          if (invalidFormatVisas.length > 0) {
+            msg = `The following visas do not exist: ${invalidFormatVisas.map((v) => v.toUpperCase()).join(', ')}`;
+          } else {
+            msg = err.errors?.visas || err.message;
+          }
+        }
+      } else if (code === 'VALIDATION_ERROR' && err.errors) {
+        msg = Object.values(err.errors).filter(Boolean).join('; ') || err.message;
+      }
+
+      setErrorMessage(msg);
     }
   };
 
