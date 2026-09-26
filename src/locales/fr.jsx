@@ -22,6 +22,7 @@ const fr = {
     allStatuses: 'Tous les statuts',
     searchBtn: 'Rechercher Projet',
     resetSearch: 'Réinitialiser',
+    selectGroup: 'Sélectionner un groupe',
     table: {
       number: 'Numéro',
       name: 'Nom',

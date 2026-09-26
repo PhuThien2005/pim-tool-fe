@@ -96,6 +96,7 @@ describe('ProjectList Component Tests', () => {
 
     fireEvent.click(advBtn);
     expect(screen.getByLabelText(/Group \(Leader Visa\)/i)).toBeInTheDocument();
+    expect(screen.getByText('Select group')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Search employee visa or name/i)).toBeInTheDocument();
 
     fireEvent.click(advBtn);

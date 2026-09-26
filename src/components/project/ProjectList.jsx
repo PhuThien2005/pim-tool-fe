@@ -32,27 +32,24 @@ export default function ProjectList() {
   const {
     projects, totalPages, searchCriteria, setSearchCriteria, resetSearch,
     sortConfig, toggleSort, currentPage, setCurrentPage, deleteProject,
-    deleteProjects, loading, groups, loadGroups, employees,
-    filterDraft, setFilterDraft
+    deleteProjects, loading, groups, loadGroups, employees
   } = useProjects();
 
   const urlKw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
   const urlSt = (searchParams.get('status') || '').toUpperCase();
-  const initialSearch = urlKw || filterDraft?.keyword || searchCriteria.keyword || searchCriteria.searchTerm || '';
-  const initialStatus = urlSt || filterDraft?.status || searchCriteria.status || '';
+  const initialSearch = urlKw || searchCriteria.keyword || searchCriteria.searchTerm || '';
+  const initialStatus = urlSt || searchCriteria.status || '';
 
   const initialAdv = Object.fromEntries(
     ADV_KEYS.map((k) => [
       k,
-      searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || filterDraft?.[k] || searchCriteria[k] || ''
+      searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || searchCriteria[k] || ''
     ])
   );
 
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [statusInput, setStatusInput] = useState(initialStatus);
-  const [showAdvanced, setShowAdvanced] = useState(
-    Boolean(filterDraft?.showAdvanced) || Object.values(initialAdv).some(Boolean)
-  );
+  const [showAdvanced, setShowAdvanced] = useState(Object.values(initialAdv).some(Boolean));
   const [advInputs, setAdvInputs] = useState(initialAdv);
 
   const [selectedIds, setSelectedIds] = useState([]);
@@ -109,31 +106,20 @@ export default function ProjectList() {
       ADV_KEYS.some((k) => searchCriteria[k])
     );
 
-    const hasDraft = Boolean(
-      filterDraft?.keyword ||
-      filterDraft?.status ||
-      ADV_KEYS.some((k) => filterDraft?.[k])
-    );
-
-    // If returning to / with no URL params but search or draft was active (e.g. Cancel button)
-    if (!hasUrlParams && (hasContextCriteria || hasDraft)) {
-      const restoredKw = searchCriteria.keyword || searchCriteria.searchTerm || filterDraft?.keyword || '';
-      const restoredSt = searchCriteria.status || filterDraft?.status || '';
+    // If returning to / with no URL params but search was active (e.g. Cancel button), restore criteria
+    if (!hasUrlParams && hasContextCriteria) {
+      const restoredKw = searchCriteria.keyword || searchCriteria.searchTerm || '';
+      const restoredSt = searchCriteria.status || '';
       const restoredAdv = Object.fromEntries(
-        ADV_KEYS.map((k) => [k, searchCriteria[k] || filterDraft?.[k] || ''])
+        ADV_KEYS.map((k) => [k, searchCriteria[k] || ''])
       );
-      const isAdvOpen = Boolean(filterDraft?.showAdvanced) || Object.values(restoredAdv).some(Boolean);
-
       setSearchInput(restoredKw);
       setStatusInput(restoredSt);
       setAdvInputs(restoredAdv);
-      if (isAdvOpen) {
+      if (Object.values(restoredAdv).some(Boolean)) {
         setShowAdvanced(true);
       }
-
-      if (hasContextCriteria) {
-        updateUrlParams({ keyword: restoredKw, status: restoredSt, ...restoredAdv });
-      }
+      updateUrlParams({ keyword: restoredKw, status: restoredSt, ...restoredAdv });
       return;
     }
 
@@ -146,17 +132,8 @@ export default function ProjectList() {
     setSearchInput(kw);
     setStatusInput(st);
     setAdvInputs(currentAdv);
-    const hasAnyAdv = Object.values(currentAdv).some(Boolean);
-    if (hasAnyAdv) {
+    if (Object.values(currentAdv).some(Boolean)) {
       setShowAdvanced(true);
-    }
-    if (setFilterDraft) {
-      setFilterDraft({
-        keyword: kw,
-        status: st,
-        ...currentAdv,
-        showAdvanced: hasAnyAdv || Boolean(filterDraft?.showAdvanced),
-      });
     }
 
     setSearchCriteria({
@@ -167,47 +144,13 @@ export default function ProjectList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const handleKeywordChange = (val) => {
-    setSearchInput(val);
-    if (setFilterDraft) {
-      setFilterDraft((prev) => ({ ...prev, keyword: val }));
-    }
-  };
-
-  const handleStatusChange = (val) => {
-    const st = (val || '').toUpperCase();
-    setStatusInput(st);
-    if (setFilterDraft) {
-      setFilterDraft((prev) => ({ ...prev, status: st }));
-    }
-  };
-
-  const handleAdvChange = (f, v) => {
-    setAdvInputs((prev) => ({ ...prev, [f]: v }));
-    if (setFilterDraft) {
-      setFilterDraft((prev) => ({ ...prev, [f]: v }));
-    }
-  };
-
-  const handleToggleAdvanced = () => {
-    const next = !showAdvanced;
-    setShowAdvanced(next);
-    if (setFilterDraft) {
-      setFilterDraft((prev) => ({ ...prev, showAdvanced: next }));
-    }
-  };
+  const handleAdvChange = (f, v) => setAdvInputs((prev) => ({ ...prev, [f]: v }));
 
   const handleSearch = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setActionError('');
     const next = syncSearch();
     setSearchCriteria(next);
-    if (setFilterDraft) {
-      setFilterDraft({
-        ...next,
-        showAdvanced,
-      });
-    }
     updateUrlParams(next);
     setSelectedIds([]);
   };
@@ -217,7 +160,6 @@ export default function ProjectList() {
     setSearchInput('');
     setStatusInput('');
     setAdvInputs(Object.fromEntries(ADV_KEYS.map((k) => [k, ''])));
-    setShowAdvanced(false);
     setActionError('');
     resetSearch();
     setSearchParams({}, { replace: true });
@@ -253,14 +195,14 @@ export default function ProjectList() {
       {actionError && <div className="error-banner" role="alert"><i className="fa fa-exclamation-circle" /><span>{actionError}</span></div>}
 
       <form className="pim-search-bar" onSubmit={handleSearch}>
-        <input type="text" className="pim-input search-input-field" placeholder={t('projectList.searchPlaceholder')} value={searchInput} onChange={(e) => handleKeywordChange(e.target.value)} />
-        <select className="pim-select search-select-field" value={statusInput} onChange={(e) => handleStatusChange(e.target.value)}>
+        <input type="text" className="pim-input search-input-field" placeholder={t('projectList.searchPlaceholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+        <select className="pim-select search-select-field" value={statusInput} onChange={(e) => setStatusInput((e.target.value || '').toUpperCase())}>
           <option value="">{t('projectList.statusPlaceholder')}</option>
           {['NEW', 'PLA', 'INP', 'FIN'].map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
         </select>
         <button type="submit" className="btn-pim-primary">{t('projectList.searchBtn')}</button>
         <button type="button" className="btn-reset-search" onClick={handleReset}>{t('projectList.resetSearch')}</button>
-        <button type="button" className="btn-advanced-toggle" onClick={handleToggleAdvanced} title={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')} aria-label={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')}>
+        <button type="button" className="btn-advanced-toggle" onClick={() => setShowAdvanced((p) => !p)} title={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')} aria-label={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')}>
           <i className="fa fa-filter" />
         </button>
       </form>
@@ -275,7 +217,7 @@ export default function ProjectList() {
                   <LocaleDatePicker id={key} value={advInputs[key]} onChange={(val) => handleAdvChange(key, val)} />
                 ) : isSelect ? (
                   <select id={key} className="pim-select input-md" value={advInputs[key]} onChange={(e) => handleAdvChange(key, e.target.value)}>
-                    <option value=""></option>
+                    <option value="">{t('projectList.selectGroup')}</option>
                     {(groups || []).map((g) => {
                       const visa = g.groupLeader?.visa || g.leaderVisa;
                       return visa ? <option key={g.id} value={visa}>{visa}</option> : null;

@@ -34,25 +34,6 @@ function ProjectProviderInner({ children }) {
     endDateTo: searchParams.get('endDateTo') || '',
   };
   const [searchCriteria, setSearchCriteriaState] = useState(initialCriteriaFromUrl);
-  const [filterDraft, setFilterDraft] = useState({
-    keyword: initialCriteriaFromUrl.keyword,
-    status: initialCriteriaFromUrl.status,
-    groupId: '',
-    leaderVisa: initialCriteriaFromUrl.leaderVisa,
-    memberVisas: initialCriteriaFromUrl.memberVisas,
-    startDateFrom: initialCriteriaFromUrl.startDateFrom,
-    startDateTo: initialCriteriaFromUrl.startDateTo,
-    endDateFrom: initialCriteriaFromUrl.endDateFrom,
-    endDateTo: initialCriteriaFromUrl.endDateTo,
-    showAdvanced: Boolean(
-      initialCriteriaFromUrl.leaderVisa ||
-      initialCriteriaFromUrl.memberVisas ||
-      initialCriteriaFromUrl.startDateFrom ||
-      initialCriteriaFromUrl.startDateTo ||
-      initialCriteriaFromUrl.endDateFrom ||
-      initialCriteriaFromUrl.endDateTo
-    ),
-  });
   const [sortConfig, setSortConfig] = useState({ field: 'projectNumber', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [groups, setGroups] = useState([]);
@@ -138,13 +119,9 @@ function ProjectProviderInner({ children }) {
         totalPages: pageResult.totalPages || 1,
         totalElements: pageResult.totalElements || 0,
         loading, groups, employees, loadGroups, loadEmployees,
-        searchCriteria, sortConfig, currentPage, filterDraft, setFilterDraft,
+        searchCriteria, sortConfig, currentPage,
         setSearchCriteria: (c) => { const next = { ...searchCriteria, ...c }; setSearchCriteriaState(next); setCurrentPage(1); },
-        resetSearch: () => {
-          setSearchCriteriaState(initialCriteria);
-          setFilterDraft({ ...initialCriteria, groupId: '', showAdvanced: false });
-          setCurrentPage(1);
-        },
+        resetSearch: () => { setSearchCriteriaState(initialCriteria); setCurrentPage(1); },
         setCurrentPage,
         toggleSort: (field) => {
           setSortConfig((prev) => ({

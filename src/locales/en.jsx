@@ -22,6 +22,7 @@ const en = {
     allStatuses: 'All Statuses',
     searchBtn: 'Search Project',
     resetSearch: 'Reset Search',
+    selectGroup: 'Select group',
     table: {
       number: 'Number',
       name: 'Name',
