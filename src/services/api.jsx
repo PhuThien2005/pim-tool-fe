@@ -63,6 +63,7 @@ apiClient.interceptors.response.use(
     formattedError.status = error.response ? error.response.status : 0;
     formattedError.errorCode = errorCode;
     formattedError.errors = fieldErrors;
+    formattedError.invalidVisas = error.response?.data?.invalidVisas || null;
     formattedError.originalError = error;
     return Promise.reject(formattedError);
   }

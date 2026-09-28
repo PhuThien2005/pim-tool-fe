@@ -175,7 +175,7 @@ export default function ProjectList() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    // Update a single advanced filter field
+    // update filter field
     const handleAdvChange = (f, v) => setAdvInputs((prev) => ({...prev, [f]: v}));
 
     // Execute search: sanitize data, trigger API, reset to page 1, sync URL
