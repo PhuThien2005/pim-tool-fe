@@ -120,7 +120,16 @@ function ProjectProviderInner({ children }) {
         totalElements: pageResult.totalElements || 0,
         loading, groups, employees, loadGroups, loadEmployees,
         searchCriteria, sortConfig, currentPage,
-        setSearchCriteria: (c) => { const next = { ...searchCriteria, ...c }; setSearchCriteriaState(next); setCurrentPage(1); },
+        setSearchCriteria: (c) => {
+          setSearchCriteriaState((prev) => {
+            const next = { ...prev, ...c };
+            const isChanged = Object.keys(next).some((k) => (next[k] || '') !== (prev[k] || ''));
+            if (isChanged) {
+              setCurrentPage(1);
+            }
+            return next;
+          });
+        },
         resetSearch: () => { setSearchCriteriaState(initialCriteria); setCurrentPage(1); },
         setCurrentPage,
         toggleSort: (field) => {

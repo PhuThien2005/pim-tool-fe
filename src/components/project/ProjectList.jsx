@@ -136,11 +136,18 @@ export default function ProjectList() {
       setShowAdvanced(true);
     }
 
-    setSearchCriteria({
-      keyword: kw.trim(),
-      status: st,
-      ...currentAdv
-    });
+    const isDifferent =
+      kw.trim() !== (searchCriteria.keyword || '').trim() ||
+      st !== (searchCriteria.status || '') ||
+      ADV_KEYS.some((k) => currentAdv[k] !== (searchCriteria[k] || ''));
+
+    if (isDifferent) {
+      setSearchCriteria({
+        keyword: kw.trim(),
+        status: st,
+        ...currentAdv,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
@@ -151,6 +158,7 @@ export default function ProjectList() {
     setActionError('');
     const next = syncSearch();
     setSearchCriteria(next);
+    setCurrentPage(1);
     updateUrlParams(next);
     setSelectedIds([]);
   };

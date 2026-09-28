@@ -71,28 +71,31 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
 
   const projectIdRef = useRef(null);
 
+  // New project mode initialization
   useEffect(() => {
-    if (!isEdit) {
-      loadGroups();
-      projectIdRef.current = null;
-      setProjectEmployees([]);
-      setErrorFields({});
-      setErrorMessage('');
-      reset({
-        projectNumber: '',
-        name: '',
-        customer: '',
-        groupId: groups[0]?.id ? String(groups[0].id) : '',
-        members: '',
-        status: 'NEW',
-        startDate: '',
-        endDate: '',
-        version: 1,
-      });
-      return;
-    }
+    if (isEdit) return;
+    loadGroups();
+    projectIdRef.current = null;
+    setProjectEmployees([]);
+    setErrorFields({});
+    setErrorMessage('');
+    reset({
+      projectNumber: '',
+      name: '',
+      customer: '',
+      groupId: groups[0]?.id ? String(groups[0].id) : '',
+      members: '',
+      status: 'NEW',
+      startDate: '',
+      endDate: '',
+      version: 1,
+    });
+  }, [isEdit, loadGroups, groups, reset]);
 
-    if (!targetId) return;
+  // Edit project mode initialization
+  useEffect(() => {
+    if (!isEdit || !targetId) return;
+    if (projectIdRef.current && String(projectIdRef.current) === String(targetId)) return;
     let isMounted = true;
 
     (async () => {
@@ -134,7 +137,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     })();
 
     return () => { isMounted = false; };
-  }, [isEdit, targetId, getProjectById, reset, navigate, groups, loadGroups]);
+  }, [isEdit, targetId, getProjectById, reset, navigate, loadGroups]);
 
   useEffect(() => {
     if (!isEdit && groups.length && !formData.groupId) setValue('groupId', String(groups[0].id));
@@ -231,6 +234,14 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     </FormRow>
   );
 
+  const handleCancel = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="pim-project-form-container">
       <h2 className="pim-form-title">{isEdit ? t('projectForm.editTitle') : t('projectForm.newTitle')}</h2>
@@ -295,7 +306,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
 
         <hr className="pim-divider" style={{ marginTop: '36px' }} />
         <div className="form-actions-row">
-          <button type="button" className="btn-pim-secondary" onClick={() => navigate('/')}>{t('projectForm.cancel')}</button>
+          <button type="button" className="btn-pim-secondary" onClick={handleCancel}>{t('projectForm.cancel')}</button>
           <button type="submit" className="btn-pim-primary" disabled={isSubmitting}>{isEdit ? t('projectForm.editProject') : t('projectForm.createProject')}</button>
         </div>
       </form>
