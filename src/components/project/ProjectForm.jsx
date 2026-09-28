@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import MemberSuggest from './MemberSuggest';
 import LocaleDatePicker from '../common/LocaleDatePicker';
@@ -44,16 +45,20 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
   const { groups, employees, createProject, updateProject, getProjectById, loadGroups } = useProjects();
 
   const [errorMessage, setErrorMessage] = useState('');
-  const [errorFields, setErrorFields] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [projectEmployees, setProjectEmployees] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const projectIdRef = useRef(null);
 
-  // Dismiss error message on language change
-  useEffect(() => {
-    setErrorMessage('');
-  }, [language]);
-
-  const { setValue, watch, reset } = useForm({
+  const {
+    register,
+    control,
+    reset,
+    setError,
+    clearErrors,
+    getValues,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(projectSchema),
     defaultValues: {
       projectNumber: '',
       name: '',
@@ -67,9 +72,9 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     },
   });
 
-  const formData = watch();
-
-  const projectIdRef = useRef(null);
+  useEffect(() => {
+    setErrorMessage('');
+  }, [language]);
 
   // New project mode initialization
   useEffect(() => {
@@ -77,7 +82,6 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     loadGroups();
     projectIdRef.current = null;
     setProjectEmployees([]);
-    setErrorFields({});
     setErrorMessage('');
     reset({
       projectNumber: '',
@@ -139,32 +143,10 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     return () => { isMounted = false; };
   }, [isEdit, targetId, getProjectById, reset, navigate, loadGroups]);
 
-  useEffect(() => {
-    if (!isEdit && groups.length && !formData.groupId) setValue('groupId', String(groups[0].id));
-  }, [isEdit, groups, formData.groupId, setValue]);
-
-  const handleChange = (field, val) => {
-    setValue(field, val);
-    if (errorFields[field]) setErrorFields((prev) => ({ ...prev, [field]: false }));
-  };
-
-  const handleSubmit = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    const result = projectSchema.safeParse(watch());
-
-    if (!result.success) {
-      const errMap = {};
-      result.error.issues.forEach((i) => { if (i.path[0]) errMap[i.path[0]] = true; });
-      setErrorFields(errMap);
-      return setErrorMessage(errMap.endDate ? t('projectForm.invalidEndDate') : t('projectForm.mandatoryNotice'));
-    }
-
-    setIsSubmitting(true);
+  const onSubmit = async (data) => {
     setErrorMessage('');
-    setErrorFields({});
-
     try {
-      const payload = { ...result.data, status: (result.data.status || 'NEW').toUpperCase() };
+      const payload = { ...data, status: (data.status || 'NEW').toUpperCase() };
       if (isEdit) {
         await updateProject(projectIdRef.current, payload);
       } else {
@@ -172,25 +154,22 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
       }
       navigate('/');
     } catch (err) {
-      setIsSubmitting(false);
       if (err.status >= 500) return navigate(`/error?detail=${encodeURIComponent(err.message || 'Error')}`);
       const code = err.errorCode || err.code;
       const isDup = code === 'DUPLICATE_NUMBER' || code === 'PROJECT_NUMBER_ALREADY_EXISTS' || Boolean(err.errors?.projectNumber);
       const isVisa = code === 'INVALID_VISAS' || code === 'VISA_NOT_FOUND' || Boolean(err.errors?.visas);
       const isDate = code === 'INVALID_END_DATE' || Boolean(err.errors?.endDate || err.errors?.startDate);
 
-      const nextErrFields = {};
-      if (isDup) nextErrFields.projectNumber = true;
-      if (isVisa) nextErrFields.members = true;
-      if (isDate) nextErrFields.endDate = true;
+      if (isDup) setError('projectNumber', { type: 'manual' });
+      if (isVisa) setError('members', { type: 'manual' });
+      if (isDate) setError('endDate', { type: 'manual' });
 
       if (err.errors) {
         Object.keys(err.errors).forEach((k) => {
           const mappedKey = k === 'visas' ? 'members' : k;
-          nextErrFields[mappedKey] = true;
+          setError(mappedKey, { type: 'manual' });
         });
       }
-      setErrorFields((prev) => ({ ...prev, ...nextErrFields }));
 
       let msg = err.message || t('common.unexpectedError');
       if (isDup) {
@@ -201,7 +180,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         if ((code === 'VISA_NOT_FOUND' || code === 'INVALID_VISAS') && err.message) {
           msg = err.message;
         } else {
-          const enteredVisas = (formData.members || '')
+          const enteredVisas = (data.members || '')
             .split(',')
             .map((v) => v.trim())
             .filter(Boolean);
@@ -220,15 +199,43 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
     }
   };
 
-  const renderTextRow = (id, field, labelKey, max, size = 'input-lg', type = 'text', extra = {}) => (
+  const handleFormSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const values = getValues();
+    const result = projectSchema.safeParse(values);
+    if (!result.success) {
+      clearErrors();
+      result.error.issues.forEach((i) => {
+        if (i.path[0]) setError(i.path[0], { type: 'manual', message: i.message });
+      });
+      const isEndDateErr = result.error.issues.some((i) => i.path[0] === 'endDate');
+      const isMandatoryErr = ['projectNumber', 'name', 'customer', 'groupId', 'startDate'].some((f) =>
+        result.error.issues.some((i) => i.path[0] === f)
+      );
+      setErrorMessage(isEndDateErr && !isMandatoryErr ? t('projectForm.invalidEndDate') : t('projectForm.mandatoryNotice'));
+      return;
+    }
+    clearErrors();
+    setSubmitting(true);
+    try {
+      await onSubmit(result.data);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderTextRow = (id, name, labelKey, max, size = 'input-lg', type = 'text', extra = {}) => (
     <FormRow label={t(`projectForm.${labelKey}`)} required htmlFor={id}>
       <input
         id={id}
         type={type}
         maxLength={max}
-        className={`pim-input ${size} align-left ${errorFields[field] ? 'field-error' : ''} ${extra.className || ''}`}
-        value={formData[field]}
-        onChange={(e) => handleChange(field, e.target.value)}
+        className={`pim-input ${size} align-left ${errors[name] ? 'field-error' : ''} ${extra.className || ''}`}
+        {...register(name, {
+          onChange: () => {
+            if (errors[name]) clearErrors(name);
+          },
+        })}
         {...extra}
       />
     </FormRow>
@@ -252,7 +259,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
           <button type="button" className="error-banner-close" onClick={() => setErrorMessage('')} title="Close">✕</button>
         </div>
       )}
-      <form onSubmit={handleSubmit} className="pim-form-body" noValidate>
+      <form onSubmit={handleFormSubmit} className="pim-form-body" noValidate>
         {renderTextRow('projectNumber', 'projectNumber', 'projectNumber', undefined, 'input-sm', 'text', {
           inputMode: 'numeric',
           pattern: '[0-9]*',
@@ -270,9 +277,12 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         <FormRow label={t('projectForm.group')} required htmlFor="group">
           <select
             id="group"
-            className={`pim-select input-md ${errorFields.groupId ? 'field-error' : ''}`}
-            value={formData.groupId}
-            onChange={(e) => handleChange('groupId', e.target.value)}
+            className={`pim-select input-md ${errors.groupId ? 'field-error' : ''}`}
+            {...register('groupId', {
+              onChange: () => {
+                if (errors.groupId) clearErrors('groupId');
+              },
+            })}
           >
             <option value="">{t('projectForm.selectGroup')}</option>
             {groups.map((g) => <option key={g.id} value={g.id}>{g.groupLeader?.visa || g.leaderVisa || g.name}</option>)}
@@ -280,15 +290,33 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         </FormRow>
 
         <FormRow label={t('projectForm.members')} width="480px">
-          <MemberSuggest value={formData.members} onChange={(v) => handleChange('members', v)} employees={employees} initialEmployees={projectEmployees} hasError={errorFields.members} />
+          <Controller
+            name="members"
+            control={control}
+            render={({ field }) => (
+              <MemberSuggest
+                value={field.value || ''}
+                onChange={(val) => {
+                  field.onChange(val);
+                  if (errors.members) clearErrors('members');
+                }}
+                employees={employees}
+                initialEmployees={projectEmployees}
+                hasError={Boolean(errors.members)}
+              />
+            )}
+          />
         </FormRow>
 
         <FormRow label={t('projectForm.status')} required htmlFor="status">
           <select
             id="status"
-            className={`pim-select input-md ${errorFields.status ? 'field-error' : ''}`}
-            value={formData.status}
-            onChange={(e) => handleChange('status', (e.target.value || '').toUpperCase())}
+            className={`pim-select input-md ${errors.status ? 'field-error' : ''}`}
+            {...register('status', {
+              onChange: () => {
+                if (errors.status) clearErrors('status');
+              },
+            })}
           >
             {['NEW', 'PLA', 'INP', 'FIN'].map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
           </select>
@@ -296,10 +324,40 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
 
         <FormRow label={t('projectForm.startDate')} required htmlFor="startDate">
           <div className="date-row-container">
-            <LocaleDatePicker id="startDate" className={errorFields.startDate ? 'field-error' : ''} hasError={Boolean(errorFields.startDate)} value={formData.startDate} onChange={(v) => handleChange('startDate', v)} />
+            <Controller
+              name="startDate"
+              control={control}
+              render={({ field }) => (
+                <LocaleDatePicker
+                  id="startDate"
+                  className={errors.startDate ? 'field-error' : ''}
+                  hasError={Boolean(errors.startDate)}
+                  value={field.value || ''}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    if (errors.startDate) clearErrors('startDate');
+                  }}
+                />
+              )}
+            />
             <div className="date-group">
               <label className="date-label" htmlFor="endDate">{t('projectForm.endDate')}</label>
-              <LocaleDatePicker id="endDate" className={errorFields.endDate ? 'field-error' : ''} hasError={Boolean(errorFields.endDate)} value={formData.endDate} onChange={(v) => handleChange('endDate', v)} />
+              <Controller
+                name="endDate"
+                control={control}
+                render={({ field }) => (
+                  <LocaleDatePicker
+                    id="endDate"
+                    className={errors.endDate ? 'field-error' : ''}
+                    hasError={Boolean(errors.endDate)}
+                    value={field.value || ''}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      if (errors.endDate) clearErrors('endDate');
+                    }}
+                  />
+                )}
+              />
             </div>
           </div>
         </FormRow>
@@ -307,7 +365,7 @@ export default function ProjectForm({ isEdit = false, projectId: propProjectId }
         <hr className="pim-divider" style={{ marginTop: '36px' }} />
         <div className="form-actions-row">
           <button type="button" className="btn-pim-secondary" onClick={handleCancel}>{t('projectForm.cancel')}</button>
-          <button type="submit" className="btn-pim-primary" disabled={isSubmitting}>{isEdit ? t('projectForm.editProject') : t('projectForm.createProject')}</button>
+          <button type="submit" className="btn-pim-primary" disabled={submitting}>{isEdit ? t('projectForm.editProject') : t('projectForm.createProject')}</button>
         </div>
       </form>
     </div>

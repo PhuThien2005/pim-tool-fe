@@ -34,12 +34,12 @@ describe('ProjectForm Component Tests', () => {
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
   });
 
-  test('displays mandatory validation notice when submitting empty form', () => {
+  test('displays mandatory validation notice when submitting empty form', async () => {
     renderWithProviders(<ProjectForm isEdit={false} />);
     const submitBtn = screen.getByRole('button', { name: /Create Project/i });
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText(/Please enter all the mandatory fields \(\*\)\./i)).toBeInTheDocument();
+    expect(await screen.findByText(/Please enter all the mandatory fields \(\*\)\./i)).toBeInTheDocument();
   });
 
   test('displays duplicate project number notice when number exists', async () => {
