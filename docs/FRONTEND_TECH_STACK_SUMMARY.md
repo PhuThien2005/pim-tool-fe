@@ -56,8 +56,9 @@ Tài liệu này tổng hợp toàn bộ hệ thống công nghệ, kiến trúc
 
 ## 4. Giao diện & Thiết kế (Styling & Design System)
 
-- **Mô hình Styling:** **Consolidated JSX Styles** ([`GlobalStyles.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/styles/GlobalStyles.jsx))
-  - Toàn bộ phong cách CSS được gom gọn và quản lý tập trung trong một file duy nhất, loại bỏ CSS bloat và không sử dụng file `.css` phân tán ngoài.
+- **Mô hình Styling Chuẩn Hóa:** **CSS Thuần Tập Trung** ([`src/styles/global.css`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/styles/global.css))
+  - Toàn bộ phong cách CSS được gom gọn và quản lý tập trung trong file `global.css`, được import tiện lợi qua [`GlobalStyles.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/styles/GlobalStyles.jsx).
+  - Tách biệt CSS khỏi JavaScript bundle giúp **giảm 4.2 KB kích thước JS chính**, tối ưu hóa bộ nhớ đệm (Browser Cache) và hỗ trợ hoàn hảo CSS Syntax Highlighting, IntelliSense trong mọi IDE.
 - **Hệ thống Font chữ:**
   - Font chữ chủ đạo: **Segoe UI** (kèm fallback `-apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif`), mang phong cách Desktop GUI chuẩn mực của ELCA S25.2.
 - **Bảng màu Chuẩn mực (Design Palette):**
@@ -68,7 +69,8 @@ Tài liệu này tổng hợp toàn bộ hệ thống công nghệ, kiến trúc
   - Nút Reset Search: `#2E85F9`
   - Liên kết Ngôn ngữ (`EN | FR`) & Trợ giúp (`Help`): `#018FE1`
   - Nút xóa / Cảnh báo nguy hiểm: `#D9534F`
-- **Bộ Icon:**
+- **Bộ Icon & Branding:**
+  - **Favicon ELCA Chuẩn 32-bit ARGB:** Bộ icon đa kích thước (`public/favicon.ico`, `public/favicon.png`, `public/favicon-16x16.png`, `public/favicon-32x32.png`, `public/favicon-64x64.png`, `public/logo_elca.png`), giữ nguyên độ sắc nét và màu cam thương hiệu của ELCA trên mọi tab trình duyệt và thiết bị di động.
   - **Font Awesome 4.7.0** tích hợp qua CDN (`fa-filter`, `fa-trash-o`, `fa-calendar`, `fa-exclamation-circle`, v.v.).
 
 ---
@@ -77,7 +79,7 @@ Tài liệu này tổng hợp toàn bộ hệ thống công nghệ, kiến trúc
 
 | Component | Vị trí file | Đặc tính nổi bật |
 |---|---|---|
-| **LocaleDatePicker** | [`LocaleDatePicker.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/components/common/LocaleDatePicker.jsx) | Bộ chọn ngày độc lập, hiển thị định dạng `YYYY-MM-DD` căn giữa. Popup lịch hiển thị tên tháng và thứ trong tuần theo ngôn ngữ ứng dụng (`EN` / `FR`), hoàn toàn không bị ảnh hưởng bởi ngôn ngữ của hệ điều hành Windows. |
+| **LocaleDatePicker** | [`LocaleDatePicker.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/components/common/LocaleDatePicker.jsx) | Bộ chọn ngày độc lập, hiển thị định dạng `YYYY-MM-DD` căn giữa. Popup lịch hiển thị tên tháng và thứ trong tuần theo ngôn ngữ ứng dụng (`EN` / `FR`), hoàn toàn không bị ảnh hưởng bởi ngôn ngữ của hệ điều hành Windows. **Bổ sung tính năng chọn nhanh Năm (Lưới 12 năm với nút chuyển trang thập kỷ `‹` `›`) và Tháng (Lưới 12 tháng) trực tiếp trên thanh tiêu đề.** |
 | **MemberSuggest** | [`MemberSuggest.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/components/project/MemberSuggest.jsx) | Hộp chọn gợi ý thành viên đa năng dạng thẻ (Chip/Tag) `[ VISA: HỌ TÊN ✕ ]`. Tách biệt chữ gõ tìm kiếm và thẻ đã chọn. Hỗ trợ cuộn vô tận (Infinite scroll dropdown) và debounce 300ms khi tìm kiếm từ API. |
 | **Pagination** | [`Pagination.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/components/common/Pagination.jsx) | Thanh phân trang 5 dự án/trang, hỗ trợ nút trang trước/sau, hiển thị trang active với màu `#0088D0` gạch chân. |
 | **ConfirmModal** | [`ConfirmModal.jsx`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/src/components/common/ConfirmModal.jsx) | Hộp thoại xác nhận trước các thao tác nhạy cảm (xóa 1 dự án hoặc xóa hàng loạt). |

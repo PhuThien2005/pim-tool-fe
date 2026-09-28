@@ -12,6 +12,7 @@ Hệ thống quản lý thông tin và hồ sơ dự án (**PIM Tool Frontend**)
 5. [Lưu ý & Mẹo khắc phục sự cố (Troubleshooting)](#-lưu-ý--mẹo-khắc-phục-sự-cố-troubleshooting)
 6. [Cấu trúc thư mục (Project Structure)](#-cấu-trúc-thư-mục-project-structure)
 7. [Các tính năng chính (Features)](#-các-tính-năng-chính-features)
+8. [Tài liệu Kỹ thuật Chi tiết (Documentation)](#-tài-liệu-kỹ-thuật-chi-tiết-documentation)
 
 ---
 
@@ -109,10 +110,17 @@ pim-front/
 │   ├── locales/            # Từ điển ngôn ngữ: en.jsx (Tiếng Anh), fr.jsx (Tiếng Pháp)
 │   ├── pages/              # Khung giao diện (MainLayout, ErrorPage, ProjectListPage...)
 │   ├── services/           # Tầng kết nối mạng: api.jsx (Axios interceptors), projectService.jsx
-│   ├── styles/             # CSS & Styled Components
+│   ├── styles/             # CSS thuần tập trung (global.css) & wrapper
 │   ├── App.jsx             # Entry component & cấu hình React Query Provider
 │   └── index.js            # Điểm khởi chạy của ứng dụng React
-├── SEARCH_FILTER_FLOW_EXPLANATION.md # Tài liệu chi tiết luồng Search & Filter
+├── docs/                   # Thư mục tài liệu kỹ thuật tập trung
+│   ├── BACKEND_EXPECTED_RESPONSES.md
+│   ├── CORE_THEORY_AND_ARCHITECTURE.md
+│   ├── FRONTEND_TECH_STACK_SUMMARY.md
+│   ├── MANUAL_TEST_CASES.md
+│   ├── PIM_SYSTEM_VERIFICATION_AND_DELIVERY_PLAN.md
+│   ├── SEARCH_FILTER_FLOW_EXPLANATION.md
+│   └── TEST_REQUIREMENTS.md
 ├── .env                    # Cấu hình biến môi trường
 ├── package.json            # Danh sách thư viện & scripts
 └── README.md               # Tài liệu hướng dẫn sử dụng
@@ -123,9 +131,10 @@ pim-front/
 ## 🌟 Các tính năng chính (Features)
 
 1. **US01 - Tạo mới & Cập nhật Dự án:**
-   - **Tạo mới:** Tự động chọn trạng thái `NEW`, kiểm tra trùng `Project Number`, kiểm tra tính hợp lệ của mã VISA thành viên.
+   - **Tạo mới:** Tự động chọn trạng thái `NEW`, kiểm tra trùng `Project Number`, kiểm tra tính hợp lệ của mã VISA thành viên theo chuẩn Requirement 11 (`The following visas do not exist: {visas}.`).
    - **Cập nhật:** Khóa trường `Project Number` (Read-only), tự động tải dữ liệu chi tiết qua `GET /projects/{id}`, gửi cập nhật qua `PUT /projects/{id}` kèm kiểm tra xung đột phiên bản (`version`).
    - **Gợi ý thành viên (Member Suggest):** Ô tìm kiếm tự động gợi ý mã VISA và họ tên nhân viên khi nhập.
+   - **Bộ chọn ngày thông minh (LocaleDatePicker):** Hỗ trợ chọn nhanh Năm (12 năm/trang) và Tháng trực tiếp ngay trên thanh tiêu đề.
 
 2. **US02 - Danh sách & Tìm kiếm Dự án:**
    - **Tìm kiếm tức thì (Debounced Search):** Tự động tìm kiếm sau 350ms ngừng gõ phím.
@@ -137,3 +146,20 @@ pim-front/
 
 3. **Đa ngôn ngữ (i18n):**
    - Hỗ trợ chuyển đổi nhanh giữa **Tiếng Anh (EN)** và **Tiếng Pháp (FR)** trực tiếp trên Header.
+
+---
+
+## 📖 Tài liệu Kỹ thuật Chi tiết (Documentation)
+
+Toàn bộ tài liệu kỹ thuật chuyên sâu được quy hoạch tập trung trong thư mục [`docs/`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs):
+
+| Tài liệu | Mô tả nội dung |
+|---|---|
+| [`docs/FRONTEND_TECH_STACK_SUMMARY.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/FRONTEND_TECH_STACK_SUMMARY.md) | Tổng quan công nghệ, kiến trúc React Hook Form + Zod, CSS thuần `global.css`, `LocaleDatePicker`, favicon 32-bit. |
+| [`docs/CORE_THEORY_AND_ARCHITECTURE.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/CORE_THEORY_AND_ARCHITECTURE.md) | Cẩm nang lý thuyết chuyên sâu, luồng dữ liệu 2 chiều `URL ⇆ State ⇆ API`, giải thích 5 hạng mục của US02. |
+| [`docs/BACKEND_EXPECTED_RESPONSES.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/BACKEND_EXPECTED_RESPONSES.md) | Ma trận đối soát từng endpoint Spring Boot, mã lỗi (`VALIDATION_ERROR`, `DUPLICATE_NUMBER`, v.v.) và SQL phát sinh. |
+| [`docs/SEARCH_FILTER_FLOW_EXPLANATION.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/SEARCH_FILTER_FLOW_EXPLANATION.md) | Chi tiết luồng tìm kiếm từ khóa, bộ lọc nâng cao, làm sạch tham số và khôi phục khi điều hướng URL. |
+| [`docs/MANUAL_TEST_CASES.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/MANUAL_TEST_CASES.md) | Toàn bộ các ca kiểm thử thủ công chi tiết theo tiêu chuẩn ELCA S25.2. |
+| [`docs/TEST_REQUIREMENTS.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/TEST_REQUIREMENTS.md) | Yêu cầu kiểm thử tự động, độ bao phủ 31/31 bài test (Unit test & UAT). |
+| [`docs/PIM_SYSTEM_VERIFICATION_AND_DELIVERY_PLAN.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/PIM_SYSTEM_VERIFICATION_AND_DELIVERY_PLAN.md) | Kế hoạch kiểm tra xác minh và các tiêu chí nghiệm thu hệ thống PIM. |
+
