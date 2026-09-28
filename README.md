@@ -162,4 +162,5 @@ Toàn bộ tài liệu kỹ thuật chuyên sâu được quy hoạch tập trun
 | [`docs/MANUAL_TEST_CASES.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/MANUAL_TEST_CASES.md) | Toàn bộ các ca kiểm thử thủ công chi tiết theo tiêu chuẩn ELCA S25.2. |
 | [`docs/TEST_REQUIREMENTS.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/TEST_REQUIREMENTS.md) | Yêu cầu kiểm thử tự động, độ bao phủ 31/31 bài test (Unit test & UAT). |
 | [`docs/PIM_SYSTEM_VERIFICATION_AND_DELIVERY_PLAN.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/PIM_SYSTEM_VERIFICATION_AND_DELIVERY_PLAN.md) | Kế hoạch kiểm tra xác minh và các tiêu chí nghiệm thu hệ thống PIM. |
+| [`docs/MOBILE_RESPONSIVE_SPEC_AND_DELIVERY_PLAN.md`](file:///C:/Users/dptn/Downloads/pim-front%201/pim-front/docs/MOBILE_RESPONSIVE_SPEC_AND_DELIVERY_PLAN.md) | Đặc tả kỹ thuật & kế hoạch toàn diện Mobile Responsive (Drawer 3 gạch, cử chỉ vuốt, UAT mobile). |
 
