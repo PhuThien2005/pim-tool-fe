@@ -569,32 +569,6 @@ a:hover {
     border-color: var(--primary-blue);
 }
 
-.btn-refresh-list {
-    background: #F0F4FF;
-    border: 1px solid #C7D9FD;
-    color: var(--primary-blue);
-    font-size: 14px;
-    cursor: pointer;
-    padding: 0;
-    width: 35px;
-    height: 35px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-}
-
-.btn-refresh-list:hover {
-    background: #E2ECFE;
-    border-color: var(--primary-blue);
-}
-
-.btn-refresh-list:active i {
-    transform: rotate(180deg);
-    transition: transform 0.2s ease;
-}
-
 /* Advanced Filter Panel */
 .advanced-filter-panel {
     background-color: #F8FAFC;
@@ -1631,7 +1605,6 @@ a:hover {
         padding: 6px 0;
     }
 
-    .btn-refresh-list,
     .btn-advanced-toggle {
         align-self: flex-end;
     }

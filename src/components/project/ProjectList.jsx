@@ -306,18 +306,6 @@ export default function ProjectList() {
                 </button>
                 <button
                     type="button"
-                    className="btn-refresh-list"
-                    onClick={() => {
-                        setActionError('');
-                        refreshProjects();
-                    }}
-                    title={t('projectList.refreshTooltip') || 'Refresh projects list'}
-                    aria-label={t('projectList.refreshTooltip') || 'Refresh projects list'}
-                >
-                    <i className="fa fa-refresh"/>
-                </button>
-                <button
-                    type="button"
                     className="btn-advanced-toggle"
                     onClick={() => setShowAdvanced((p) => !p)}
                     title={showAdvanced ? t('projectList.hideAdvanced') : t('projectList.showAdvanced')}

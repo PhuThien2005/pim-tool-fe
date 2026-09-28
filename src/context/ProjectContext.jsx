@@ -16,7 +16,7 @@ export const defaultQueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      refetchOnWindowFocus: process.env.NODE_ENV !== 'test',
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -44,8 +44,8 @@ function ProjectProviderInner({ children }) {
   const [groups, setGroups] = useState([]);
   const [employees, setEmployees] = useState([]);
 
-  // useQuery is the SOLE data source for projects — active on Project List page
-  // Includes auto-refetch on window focus and a gentle 5-second polling interval for multi-user demo environments
+  // useQuery is the SOLE data source for projects — active on Project List page.
+  // No background polling or unexpected window focus refetch: API is only called on-demand (search, pagination, sort, or after mutations).
   const { data: pageResult = EMPTY_PAGE, isLoading: loading } = useQuery({
     queryKey: ['projects', searchCriteria, currentPage, sortConfig],
     queryFn: async () => {
@@ -54,7 +54,6 @@ function ProjectProviderInner({ children }) {
       return projectService.searchProjects(searchCriteria, { page: pageIndex, size: 5, sort });
     },
     enabled: process.env.NODE_ENV === 'test' || isProjectListPage,
-    refetchInterval: process.env.NODE_ENV === 'test' ? false : 5000,
   });
 
   // Lazy load groups — only called when filter panel opens or form mounts
