@@ -78,18 +78,18 @@ flowchart TD
 ## 4. ✅ Tiêu Chí Chấp Nhận (Acceptance Criteria)
 
 ### A. Tiêu chí Desktop (Bắt buộc không suy thoái):
-- [ ] **AC-DT-01:** Trên màn hình $\ge 769\text{px}$, Sidebar hiển thị cố định bên trái (`240px`), không có nút 3 gạch Hamburger.
-- [ ] **AC-DT-02:** Toàn bộ 5 test suites tự động (**31/31 tests**) tiếp tục PASS 100%.
-- [ ] **AC-DT-03:** Các quy tắc căn lề bảng chuẩn S25.2 (Number căn phải, Date căn giữa, v.v.) không bị xê dịch trên Desktop.
+- [x] **AC-DT-01:** Trên màn hình $\ge 769\text{px}$, Sidebar hiển thị cố định bên trái (`240px`), không có nút 3 gạch Hamburger.
+- [x] **AC-DT-02:** Toàn bộ test suites tự động (**6/6 suites, 37/37 tests**) PASS 100%.
+- [x] **AC-DT-03:** Các quy tắc căn lề bảng chuẩn S25.2 (Number căn phải, Date căn giữa, v.v.) không bị xê dịch trên Desktop.
 
 ### B. Tiêu chí Mobile:
-- [ ] **AC-MB-01:** Trên màn hình $\le 768\text{px}$, Sidebar thu vào Drawer ẩn; nút 3 gạch xuất hiện trên Header.
-- [ ] **AC-MB-02:** Bấm nút 3 gạch $\rightarrow$ Drawer trượt ra mượt mà kèm lớp phủ mờ; bấm nút ✕ hoặc bấm ra ngoài $\rightarrow$ Drawer đóng lại.
-- [ ] **AC-MB-03:** Vuốt ngón tay sang trái trên Drawer $\rightarrow$ Drawer tự động trượt đóng lại.
-- [ ] **AC-MB-04:** Bấm bất kỳ link nào trong Drawer (`Projects list`, `Project`) $\rightarrow$ chuyển trang và tự động đóng Drawer.
-- [ ] **AC-MB-05:** Màn hình Project List trên mobile không bị tràn màn hình ngang; bảng dữ liệu cuộn ngang độc lập không làm vỡ trang.
-- [ ] **AC-MB-06:** Màn hình Project Form trên mobile hiển thị nhãn phía trên ô nhập liệu, không bị che khuất ô nhập hoặc lỗi layout.
-- [ ] **AC-MB-07:** Popup chọn ngày `LocaleDatePicker` (chọn ngày, tháng, năm) hiển thị đầy đủ trong màn hình di động.
+- [x] **AC-MB-01:** Trên màn hình $\le 768\text{px}$, Sidebar thu vào Drawer ẩn; nút 3 gạch xuất hiện trên Header.
+- [x] **AC-MB-02:** Bấm nút 3 gạch $\rightarrow$ Drawer trượt ra mượt mà kèm lớp phủ mờ; bấm nút ✕ hoặc bấm ra ngoài $\rightarrow$ Drawer đóng lại.
+- [x] **AC-MB-03:** Vuốt ngón tay sang trái trên Drawer $\rightarrow$ Drawer tự động trượt đóng lại.
+- [x] **AC-MB-04:** Bấm bất kỳ link nào trong Drawer (`Projects list`, `Project`) $\rightarrow$ chuyển trang và tự động đóng Drawer.
+- [x] **AC-MB-05:** Màn hình Project List trên mobile không bị tràn màn hình ngang; bảng dữ liệu cuộn ngang độc lập không làm vỡ trang.
+- [x] **AC-MB-06:** Màn hình Project Form trên mobile hiển thị nhãn phía trên ô nhập liệu, không bị che khuất ô nhập hoặc lỗi layout.
+- [x] **AC-MB-07:** Popup chọn ngày `LocaleDatePicker` (chọn ngày, tháng, năm) hiển thị đầy đủ trong màn hình di động.
 
 ---
 
@@ -109,10 +109,10 @@ flowchart TD
 | Giai đoạn (Phase) | Nội dung công việc | File tác động chính | Trạng thái |
 |---|---|---|:---:|
 | **Phase 1: Skill & Spec** | Khởi tạo skill `mobile-responsive-design` và tài liệu đặc tả | `.agents/skills/mobile-responsive-design/`, `docs/` | `[DONE]` |
-| **Phase 2: Layout & Drawer** | Bổ sung nút Hamburger, Drawer State, Touch Gestures & Backdrop | `Header.jsx`, `Sidebar.jsx`, `MainLayout.jsx` | `[READY]` |
-| **Phase 3: Form & Table Responsive** | Viết Media Queries cho bảng cuộn ngang, form 1 cột, datepicker mobile | `src/styles/global.css` | `[READY]` |
-| **Phase 4: Test & Non-Regression** | Chạy kiểm thử tự động Jest (31 tests), test đa kích thước màn hình | Test suite & Viewport checks | `[READY]` |
-| **Phase 5: Deploy & Handover** | Build production, commit & push lên GitHub Vercel | GitHub Repository | `[READY]` |
+| **Phase 2: Layout & Drawer** | Bổ sung nút Hamburger, Drawer State, Touch Gestures & Backdrop | `Header.jsx`, `Sidebar.jsx`, `MainLayout.jsx` | `[DONE]` |
+| **Phase 3: Form & Table Responsive** | Viết Media Queries cho bảng cuộn ngang, form 1 cột, datepicker mobile | `src/styles/global.css` | `[DONE]` |
+| **Phase 4: Test & Non-Regression** | Chạy kiểm thử tự động Jest (37 tests), test cử chỉ vuốt & đóng mở Drawer | `MobileNavigation.test.jsx`, test suites | `[DONE]` |
+| **Phase 5: Deploy & Handover** | Build production, commit & push lên GitHub Vercel | GitHub Repository | `[DONE]` |
 
 ---
 

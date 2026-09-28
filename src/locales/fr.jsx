@@ -3,12 +3,15 @@ const fr = {
     title: 'Gestion des Informations des Projets',
     help: 'Aide',
     logout: 'Déconnexion',
+    openMenu: 'Ouvrir le menu de navigation',
+    closeMenu: 'Fermer le menu de navigation',
     languages: {
       en: 'EN',
       fr: 'FR',
     },
   },
   sidebar: {
+    menu: 'Menu',
     projectList: 'Liste des projets',
     new: 'Nouveau',
     project: 'Projet',

@@ -1342,3 +1342,406 @@ a:hover {
     background-color: #3399FF;
     color: #FFFFFF;
 }
+
+/* ==========================================================================
+   Desktop Layout Baseline & Navigation Drawer Styles
+   ========================================================================== */
+.pim-app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #FFFFFF;
+}
+
+.pim-body-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+.pim-main-content {
+    flex: 1;
+    padding: 16px 24px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.pim-main-content.error-content {
+    padding: 0;
+}
+
+.header-brand-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-hamburger-btn {
+    display: none !important;
+}
+
+.sidebar-mobile-header {
+    display: none !important;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+/* ==========================================================================
+   Mobile Responsive Media Queries (Tablets & Smartphones <= 768px)
+   Strictly scoped to avoid altering desktop / laptop presentation
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Header Responsive Layout */
+    .pim-header {
+        padding: 10px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background-color: #FFFFFF;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .header-hamburger-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #555555;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 8px;
+        margin-right: 4px;
+        border-radius: 4px;
+        transition: background-color 0.15s, color 0.15s;
+        line-height: 1;
+    }
+
+    .header-hamburger-btn:hover,
+    .header-hamburger-btn:focus {
+        background-color: #F0F4FF;
+        color: var(--primary-blue);
+    }
+
+    .header-brand-container {
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .header-left {
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .header-logo {
+        height: 32px;
+    }
+
+    .header-title {
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 190px;
+    }
+
+    .header-right {
+        gap: 12px;
+        font-size: 13px;
+    }
+
+    .header-link-help,
+    .header-link-logout {
+        display: none;
+    }
+
+    /* Off-canvas Navigation Drawer */
+    .pim-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 280px !important;
+        max-width: 85vw !important;
+        height: 100vh !important;
+        z-index: 1200 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none;
+        background-color: #FFFFFF !important;
+        padding: 0 0 24px 0 !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        border-right: 1px solid #E0E0E0;
+    }
+
+    .pim-sidebar.mobile-open {
+        transform: translateX(0) !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    .sidebar-mobile-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #EAEAEA;
+        background-color: #FAFAFA;
+        margin-bottom: 16px;
+    }
+
+    .sidebar-mobile-title {
+        font-family: var(--font-segoe);
+        font-size: 16px;
+        font-weight: 600;
+        color: #333333;
+    }
+
+    .sidebar-close-btn {
+        background: none;
+        border: none;
+        font-size: 26px;
+        color: #777777;
+        cursor: pointer;
+        padding: 4px 8px;
+        line-height: 1;
+        border-radius: 4px;
+        transition: color 0.15s, background-color 0.15s;
+    }
+
+    .sidebar-close-btn:hover {
+        color: #D9534F;
+        background-color: #FDF2F2;
+    }
+
+    .sidebar-inner {
+        padding: 0 20px !important;
+        width: 100% !important;
+    }
+
+    .sidebar-title-link,
+    .sidebar-heading {
+        font-size: 16px !important;
+    }
+
+    .sidebar-nav-item a {
+        font-size: 15px !important;
+        padding: 8px 0;
+        display: block;
+    }
+
+    /* Backdrop Overlay */
+    .sidebar-backdrop {
+        display: block !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.45);
+        z-index: 1199;
+        backdrop-filter: blur(2px);
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    /* Main Content Body */
+    .pim-body-layout {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .pim-main-content {
+        padding: 12px 14px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Project List Page Mobile Ergonomics */
+    .pim-project-list-container {
+        padding: 12px 8px !important;
+        width: 100% !important;
+    }
+
+    .pim-page-title {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .pim-search-bar {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .search-input-field,
+    .search-select-field {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .pim-search-bar .btn-pim-primary {
+        width: 100% !important;
+    }
+
+    .pim-search-bar .btn-reset-search {
+        text-align: center;
+        padding: 6px 0;
+    }
+
+    .btn-advanced-toggle {
+        align-self: flex-end;
+    }
+
+    .advanced-filter-panel {
+        padding: 12px 14px !important;
+        margin: 10px 0 16px 0 !important;
+    }
+
+    .advanced-filter-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .advanced-filter-item .pim-select,
+    .advanced-filter-item .locale-datepicker-wrapper,
+    .advanced-filter-item .member-suggest-box {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Horizontal Table Scroll for Mobile */
+    .pim-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        display: block !important;
+        border-radius: 4px;
+    }
+
+    .pim-table {
+        min-width: 720px;
+    }
+
+    .table-selection-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 10px 14px !important;
+    }
+
+    .pim-pagination-container {
+        justify-content: center !important;
+        width: 100% !important;
+        overflow-x: auto;
+    }
+
+    /* Project Form Mobile Ergonomics (Single-column Stack) */
+    .pim-project-form-container {
+        padding: 12px 8px !important;
+        width: 100% !important;
+    }
+
+    .pim-form-title {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .form-row-custom {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        margin-bottom: 16px !important;
+        width: 100% !important;
+    }
+
+    .form-label-col {
+        width: 100% !important;
+        text-align: left !important;
+        margin-bottom: 6px !important;
+        font-size: 13px !important;
+    }
+
+    .form-input-col {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .input-sm,
+    .input-md,
+    .input-lg {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .member-suggest-box {
+        max-width: 100% !important;
+    }
+
+    .member-suggest-dropdown {
+        max-width: 100% !important;
+    }
+
+    .date-row-container {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        height: auto !important;
+        width: 100% !important;
+    }
+
+    .date-group {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        height: auto !important;
+        width: 100% !important;
+    }
+
+    .date-group .locale-datepicker-container,
+    .date-group .locale-datepicker-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .form-actions-row {
+        flex-direction: column-reverse !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        margin-top: 24px !important;
+        padding-top: 14px !important;
+    }
+
+    .form-actions-row button {
+        width: 100% !important;
+        height: 40px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-title {
+        display: none;
+    }
+
+    .pim-header {
+        padding: 8px 12px;
+    }
+
+    .pim-main-content {
+        padding: 8px 10px;
+    }
+
+    .pim-modal-box {
+        width: 95% !important;
+        margin: 10px;
+    }
+}
+

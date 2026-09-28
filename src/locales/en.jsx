@@ -3,12 +3,15 @@ const en = {
     title: 'Project Information Management',
     help: 'Help',
     logout: 'Log out',
+    openMenu: 'Open navigation menu',
+    closeMenu: 'Close navigation menu',
     languages: {
       en: 'EN',
       fr: 'FR',
     },
   },
   sidebar: {
+    menu: 'Menu',
     projectList: 'Projects list',
     new: 'New',
     project: 'Project',

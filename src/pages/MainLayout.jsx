@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
@@ -9,15 +9,46 @@ import ErrorPage from './ErrorPage';
 export default function MainLayout() {
   const location = useLocation();
   const isError = location.pathname === '/error';
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Automatically close mobile drawer when navigating to a new route
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
+
+  const handleToggleSidebar = () => {
+    setIsMobileSidebarOpen((prev) => !prev);
+  };
+
+  const handleCloseSidebar = () => {
+    setIsMobileSidebarOpen(false);
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      <Header />
+    <div className="pim-app-layout">
+      <Header
+        onToggleSidebar={handleToggleSidebar}
+        isSidebarOpen={isMobileSidebarOpen}
+      />
 
-      <div style={{ display: 'flex', flex: 1 }}>
-        {!isError && <Sidebar />}
+      <div className="pim-body-layout">
+        {/* Mobile backdrop overlay */}
+        {isMobileSidebarOpen && !isError && (
+          <div
+            className="sidebar-backdrop"
+            onClick={handleCloseSidebar}
+            data-testid="sidebar-backdrop"
+          />
+        )}
 
-        <main style={{ flex: 1, padding: isError ? '0' : '16px 24px', overflowY: 'auto' }}>
+        {!isError && (
+          <Sidebar
+            isOpen={isMobileSidebarOpen}
+            onClose={handleCloseSidebar}
+          />
+        )}
+
+        <main className={`pim-main-content ${isError ? 'error-content' : ''}`}>
           <Routes>
             <Route path="/" element={<ProjectListPage />} />
             <Route path="/projects" element={<ProjectListPage />} />

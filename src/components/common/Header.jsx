@@ -3,15 +3,28 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import logo from '../../assets/images/logo_elca.png';
 
-export default function Header() {
+export default function Header({ onToggleSidebar, isSidebarOpen = false }) {
   const { language, setLanguage, t } = useLanguage();
 
   return (
     <header className="pim-header">
-      <Link to="/" className="header-left" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
-        <img src={logo} alt="ELCA Logo" className="header-logo" />
-        <h1 className="header-title">{t('header.title')}</h1>
-      </Link>
+      <div className="header-brand-container">
+        <button
+          type="button"
+          className="header-hamburger-btn"
+          onClick={onToggleSidebar}
+          aria-label={isSidebarOpen ? t('header.closeMenu') || 'Close navigation menu' : t('header.openMenu') || 'Open navigation menu'}
+          aria-expanded={isSidebarOpen}
+          data-testid="header-hamburger-btn"
+        >
+          <i className={`fa ${isSidebarOpen ? 'fa-times' : 'fa-bars'}`} />
+        </button>
+
+        <Link to="/" className="header-left" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+          <img src={logo} alt="ELCA Logo" className="header-logo" />
+          <h1 className="header-title">{t('header.title')}</h1>
+        </Link>
+      </div>
 
       <div className="header-right">
         <div className="lang-switch">
