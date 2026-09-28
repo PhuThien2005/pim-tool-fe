@@ -29,7 +29,7 @@ const validate = (d) => {
 
 // Internal sync helpers (used by tests that need direct store access)
 const _searchSync = (criteria = {}, pageable = { page: 0, size: 5, sort: 'projectNumber,asc' }) => {
-  const kw = (criteria.searchTerm || criteria.keyword || '').trim().toLowerCase();
+  const kw = (criteria.keyword || '').trim().toLowerCase();
   const st = (criteria.status || '').toUpperCase();
   const leader = (criteria.leaderVisa || '').trim().toLowerCase();
   const memberVisas = (criteria.memberVisas || '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);

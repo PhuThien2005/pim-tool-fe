@@ -24,7 +24,7 @@ function ProjectProviderInner({ children }) {
 
   const searchParams = new URLSearchParams(window.location.search);
   const initialCriteriaFromUrl = {
-    keyword: searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '',
+    keyword: searchParams.get('keyword') || '',
     status: (searchParams.get('status') || '').toUpperCase(),
     leaderVisa: searchParams.get('leaderVisa') || '',
     memberVisas: (searchParams.get('memberVisas') || searchParams.get('memberVisa') || '').replace(/\s*,\s*/g, ','),

@@ -35,9 +35,9 @@ export default function ProjectList() {
     deleteProjects, loading, groups, loadGroups, employees
   } = useProjects();
 
-  const urlKw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
+  const urlKw = searchParams.get('keyword') || '';
   const urlSt = (searchParams.get('status') || '').toUpperCase();
-  const initialSearch = urlKw || searchCriteria.keyword || searchCriteria.searchTerm || '';
+  const initialSearch = urlKw || searchCriteria.keyword || '';
   const initialStatus = urlSt || searchCriteria.status || '';
 
   const initialAdv = Object.fromEntries(
@@ -93,22 +93,19 @@ export default function ProjectList() {
   useEffect(() => {
     const hasUrlParams = Boolean(
       searchParams.get('keyword') ||
-      searchParams.get('searchTerm') ||
-      searchParams.get('search') ||
       searchParams.get('status') ||
       ADV_KEYS.some((k) => searchParams.get(k))
     );
 
     const hasContextCriteria = Boolean(
       searchCriteria.keyword ||
-      searchCriteria.searchTerm ||
       searchCriteria.status ||
       ADV_KEYS.some((k) => searchCriteria[k])
     );
 
     // If returning to / with no URL params but search was active (e.g. Cancel button), restore criteria
     if (!hasUrlParams && hasContextCriteria) {
-      const restoredKw = searchCriteria.keyword || searchCriteria.searchTerm || '';
+      const restoredKw = searchCriteria.keyword || '';
       const restoredSt = searchCriteria.status || '';
       const restoredAdv = Object.fromEntries(
         ADV_KEYS.map((k) => [k, searchCriteria[k] || ''])
@@ -123,7 +120,7 @@ export default function ProjectList() {
       return;
     }
 
-    const kw = searchParams.get('keyword') || searchParams.get('searchTerm') || searchParams.get('search') || '';
+    const kw = searchParams.get('keyword') || '';
     const st = (searchParams.get('status') || '').toUpperCase();
     const currentAdv = Object.fromEntries(
       ADV_KEYS.map((k) => [k, searchParams.get(k) || (k === 'memberVisas' && searchParams.get('memberVisa')) || ''])
