@@ -54,6 +54,7 @@ export default function ProjectList() {
         groups,
         loadGroups,
         employees,
+        refreshProjects,
     } = useProjects();
 
     // initial val: URL query params > Context criteria > Empty string
@@ -220,11 +221,25 @@ export default function ProjectList() {
             await (modalConfig.ids.length === 1
                 ? deleteProject(modalConfig.ids[0])
                 : deleteProjects(modalConfig.ids));
-            setSelectedIds((prev) => prev.filter((id) => !modalConfig.ids.includes(id)));
         } catch (err) {
-            setActionError(err.response?.data?.message || err.message || 'Failed to delete');
+            const isStaleOrGone =
+                err.status === 404 ||
+                err.code === 'NOT_FOUND' ||
+                err.status === 409 ||
+                err.code === 'CONCURRENT_UPDATE' ||
+                /not found|already deleted|modified/i.test(err.message || '');
+
+            if (isStaleOrGone) {
+                setActionError(t('projectList.concurrentDeleteNotice') || 'The project was already deleted or modified by another user. The list has been refreshed.');
+            } else {
+                setActionError(err.response?.data?.message || err.message || 'Failed to delete');
+            }
         } finally {
+            // Always clean up selected IDs and close modal
+            setSelectedIds((prev) => prev.filter((id) => !modalConfig.ids.includes(id)));
             setModalConfig({isOpen: false, ids: [], message: ''});
+            // Ensure projects list is always freshly synchronized with server
+            refreshProjects();
         }
     };
 
@@ -240,15 +255,29 @@ export default function ProjectList() {
             <h2 className="pim-page-title">{t('projectList.title')}</h2>
             <hr className="pim-divider"/>
 
-            {/* 2. Action Error Banner */}
+            {/* 2. Action Error Banner with Dismiss and Refresh */}
             {actionError && (
                 <div className="error-banner" role="alert">
-                    <i className="fa fa-exclamation-circle"/>
-                    <span>{actionError}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <i className="fa fa-exclamation-circle"/>
+                        <span>{actionError}</span>
+                    </div>
+                    <button
+                        type="button"
+                        className="error-banner-close"
+                        onClick={() => {
+                            setActionError('');
+                            refreshProjects();
+                        }}
+                        title={t('common.close') || 'Close'}
+                        aria-label="Close error"
+                    >
+                        ✕
+                    </button>
                 </div>
             )}
 
-            {/* 3. Basic Search Bar */}
+            {/* 3. Basic Search Bar with Refresh and Advanced Filter */}
             <form className="pim-search-bar" onSubmit={handleSearch}>
                 <input
                     type="text"
@@ -274,6 +303,18 @@ export default function ProjectList() {
                 </button>
                 <button type="button" className="btn-reset-search" onClick={handleReset}>
                     {t('projectList.resetSearch')}
+                </button>
+                <button
+                    type="button"
+                    className="btn-refresh-list"
+                    onClick={() => {
+                        setActionError('');
+                        refreshProjects();
+                    }}
+                    title={t('projectList.refreshTooltip') || 'Refresh projects list'}
+                    aria-label={t('projectList.refreshTooltip') || 'Refresh projects list'}
+                >
+                    <i className="fa fa-refresh"/>
                 </button>
                 <button
                     type="button"

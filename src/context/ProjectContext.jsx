@@ -13,7 +13,12 @@ const initialCriteria = {
 const EMPTY_PAGE = { content: [], totalPages: 1, totalElements: 0 };
 
 export const defaultQueryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: process.env.NODE_ENV !== 'test',
+    },
+  },
 });
 
 function ProjectProviderInner({ children }) {
@@ -39,7 +44,8 @@ function ProjectProviderInner({ children }) {
   const [groups, setGroups] = useState([]);
   const [employees, setEmployees] = useState([]);
 
-  // useQuery is the SOLE data source for projects — only active on Project List page
+  // useQuery is the SOLE data source for projects — active on Project List page
+  // Includes auto-refetch on window focus and a gentle 5-second polling interval for multi-user demo environments
   const { data: pageResult = EMPTY_PAGE, isLoading: loading } = useQuery({
     queryKey: ['projects', searchCriteria, currentPage, sortConfig],
     queryFn: async () => {
@@ -48,6 +54,7 @@ function ProjectProviderInner({ children }) {
       return projectService.searchProjects(searchCriteria, { page: pageIndex, size: 5, sort });
     },
     enabled: process.env.NODE_ENV === 'test' || isProjectListPage,
+    refetchInterval: process.env.NODE_ENV === 'test' ? false : 5000,
   });
 
   // Lazy load groups — only called when filter panel opens or form mounts
@@ -79,29 +86,42 @@ function ProjectProviderInner({ children }) {
     [queryClient]
   );
 
-  // CRUD operations — all async, invalidate cache after
+  // CRUD operations — all async, always invalidate cache in finally block so
+  // concurrent delete/edit errors immediately refresh and clear stale items from UI
   const createProject = useCallback(async (data) => {
-    const res = await projectService.createProject(data);
-    refreshProjects();
-    return res;
+    try {
+      const res = await projectService.createProject(data);
+      return res;
+    } finally {
+      refreshProjects();
+    }
   }, [refreshProjects]);
 
   const updateProject = useCallback(async (num, data) => {
-    const res = await projectService.updateProject(num, data);
-    refreshProjects();
-    return res;
+    try {
+      const res = await projectService.updateProject(num, data);
+      return res;
+    } finally {
+      refreshProjects();
+    }
   }, [refreshProjects]);
 
   const deleteProject = useCallback(async (id) => {
-    const res = await projectService.deleteProject(id);
-    refreshProjects();
-    return res;
+    try {
+      const res = await projectService.deleteProject(id);
+      return res;
+    } finally {
+      refreshProjects();
+    }
   }, [refreshProjects]);
 
   const deleteProjects = useCallback(async (ids) => {
-    const res = await projectService.deleteProjects(ids);
-    refreshProjects();
-    return res;
+    try {
+      const res = await projectService.deleteProjects(ids);
+      return res;
+    } finally {
+      refreshProjects();
+    }
   }, [refreshProjects]);
 
   const getProjectById = useCallback(async (id) => {

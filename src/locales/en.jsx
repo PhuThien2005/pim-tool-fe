@@ -40,6 +40,8 @@ const en = {
     confirmDeleteMultiple: 'Are you sure you want to delete %{count} selected projects?',
     noProjectsFound: 'No projects found.',
     statusOnlyNewDelete: 'Only projects with status "New" can be deleted.',
+    concurrentDeleteNotice: 'The project was already deleted or modified by another user. The list has been refreshed.',
+    refreshTooltip: 'Refresh projects list',
     advancedFilter: 'Advanced Filter',
     hideAdvanced: 'Hide Advanced Filter',
     showAdvanced: 'Show Advanced Filter',
@@ -53,6 +55,7 @@ const en = {
   projectForm: {
     newTitle: 'New Project',
     editTitle: 'Edit Project information',
+    concurrentEditNotice: 'The project has been modified by another user. Please reload the page to get the latest data.',
     projectNumber: 'Project Number',
     projectName: 'Project name',
     customer: 'Customer',

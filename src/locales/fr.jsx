@@ -40,6 +40,8 @@ const fr = {
     confirmDeleteMultiple: 'Êtes-vous sûr de vouloir supprimer %{count} projets sélectionnés ?',
     noProjectsFound: 'Aucun projet trouvé.',
     statusOnlyNewDelete: 'Seuls les projets avec le statut "Nouveau" peuvent être supprimés.',
+    concurrentDeleteNotice: 'Le projet a déjà été supprimé ou modifié par un autre utilisateur. La liste a été actualisée.',
+    refreshTooltip: 'Actualiser la liste des projets',
     advancedFilter: 'Filtre avancé',
     hideAdvanced: 'Masquer le filtre avancé',
     showAdvanced: 'Afficher le filtre avancé',
@@ -53,6 +55,7 @@ const fr = {
   projectForm: {
     newTitle: 'Nouveau Projet',
     editTitle: 'Modifier les informations du projet',
+    concurrentEditNotice: 'Le projet a été modifié par un autre utilisateur. Veuillez recharger la page pour obtenir les dernières données.',
     projectNumber: 'Numéro de projet',
     projectName: 'Nom du projet',
     customer: 'Client',

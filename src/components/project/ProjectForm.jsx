@@ -42,7 +42,7 @@ export default function ProjectForm({isEdit = false, projectId: propProjectId}) 
     const navigate = useNavigate();
     const params = useParams();
     const targetId = propProjectId || params.id || params.projectNumber;
-    const {groups, employees, createProject, updateProject, getProjectById, loadGroups} = useProjects();
+    const {groups, employees, createProject, updateProject, getProjectById, loadGroups, refreshProjects} = useProjects();
 
     const [errorMessage, setErrorMessage] = useState('');
     const [projectEmployees, setProjectEmployees] = useState([]);
@@ -211,6 +211,12 @@ export default function ProjectForm({isEdit = false, projectId: propProjectId}) 
                 } else {
                     msg = t('projectForm.invalidVisas', {visas: 'unknown'});
                 }
+            } else if (err.status === 409 || code === 'CONCURRENT_UPDATE' || /concurrent/i.test(err.message || '')) {
+                msg = t('projectForm.concurrentEditNotice') || err.message;
+                refreshProjects();
+            } else if (err.status === 404 || code === 'NOT_FOUND' || /not found/i.test(err.message || '')) {
+                msg = t('projectList.concurrentDeleteNotice') || 'The project no longer exists. It may have been deleted by another user.';
+                refreshProjects();
             } else if (code === 'VALIDATION_ERROR' && err.errors) {
                 msg = Object.values(err.errors).filter(Boolean).join('; ') || err.message;
             } else {

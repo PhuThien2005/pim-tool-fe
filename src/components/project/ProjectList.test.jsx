@@ -115,4 +115,29 @@ describe('ProjectList Component Tests', () => {
     fireEvent.click(nameHeader);
     expect(nameHeader.querySelector('.sort-caret').textContent).toBe('▼');
   });
+
+  test('handles concurrent delete error gracefully by refreshing and showing concurrency notice', async () => {
+    jest.spyOn(projectService, 'deleteProject').mockRejectedValueOnce(
+      Object.assign(new Error('Project not found'), { status: 404, code: 'NOT_FOUND' })
+    );
+
+    renderWithProviders(<ProjectList />);
+    await screen.findByRole('link', { name: '3116' });
+
+    const deleteBtn = screen.getByLabelText('Delete project 3116');
+    fireEvent.click(deleteBtn);
+
+    const confirmBtn = screen.getByRole('button', { name: 'Confirm', selector: '.btn-pim-danger' });
+    fireEvent.click(confirmBtn);
+
+    expect(
+      await screen.findByText(/already deleted or modified by another user/i)
+    ).toBeInTheDocument();
+
+    const closeBtn = screen.getByLabelText('Close error');
+    fireEvent.click(closeBtn);
+    expect(screen.queryByText(/already deleted or modified by another user/i)).not.toBeInTheDocument();
+
+    projectService.deleteProject.mockRestore?.();
+  });
 });
