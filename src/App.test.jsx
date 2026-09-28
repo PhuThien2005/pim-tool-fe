@@ -34,4 +34,11 @@ describe('PIM Tool Application Integration Tests', () => {
     // Header title back in English
     expect(screen.getByText('Project Information Management')).toBeInTheDocument();
   });
+
+  test('clicking New in sidebar navigates to new project form', async () => {
+    render(<App />);
+    const newHeading = screen.getByText('New', { selector: '.sidebar-heading' });
+    fireEvent.click(newHeading);
+    expect(await screen.findByText('New Project')).toBeInTheDocument();
+  });
 });

@@ -73,7 +73,13 @@ export default function Sidebar({ isOpen = false, onClose }) {
         </div>
 
         <div className="sidebar-section">
-          <div className={`sidebar-heading ${isNewProjectActive ? 'active' : ''}`}>{t('sidebar.new')}</div>
+          <NavLink
+            to="/project/new"
+            className={`sidebar-heading ${isNewProjectActive || isEditProjectActive ? 'active' : ''}`}
+            onClick={handleNavClick}
+          >
+            {t('sidebar.new')}
+          </NavLink>
           <ul className="sidebar-nav">
             <li className="sidebar-nav-item">
               <NavLink
