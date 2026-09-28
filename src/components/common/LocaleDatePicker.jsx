@@ -6,6 +6,11 @@ const MONTHS = {
   fr: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
 };
 
+const SHORT_MONTHS = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  fr: ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'],
+};
+
 const DAYS = {
   en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
   fr: ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'],
@@ -24,6 +29,7 @@ export default function LocaleDatePicker({
   const displayPlaceholder = placeholder || (lang === 'fr' ? 'aaaa-mm-jj' : 'yyyy-mm-dd');
 
   const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState('days'); // 'days' | 'months' | 'years'
   const containerRef = useRef(null);
 
   // Parse current value (YYYY-MM-DD) or default to today for calendar view
@@ -42,6 +48,7 @@ export default function LocaleDatePicker({
   const selectedDate = parseDate(value);
   const [viewYear, setViewYear] = useState(() => (selectedDate ? selectedDate.getFullYear() : new Date().getFullYear()));
   const [viewMonth, setViewMonth] = useState(() => (selectedDate ? selectedDate.getMonth() : new Date().getMonth()));
+  const [yearPage, setYearPage] = useState(() => Math.floor((selectedDate ? selectedDate.getFullYear() : new Date().getFullYear()) / 12) * 12);
 
   // Keep view in sync when value changes externally
   useEffect(() => {
@@ -49,6 +56,7 @@ export default function LocaleDatePicker({
     if (d) {
       setViewYear(d.getFullYear());
       setViewMonth(d.getMonth());
+      setYearPage(Math.floor(d.getFullYear() / 12) * 12);
     }
   }, [value]);
 
@@ -57,6 +65,7 @@ export default function LocaleDatePicker({
     const handleOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);
+        setMode('days');
       }
     };
     if (isOpen) {
@@ -67,23 +76,35 @@ export default function LocaleDatePicker({
     };
   }, [isOpen]);
 
-  const handlePrevMonth = (e) => {
+  const handlePrev = (e) => {
     e.stopPropagation();
-    if (viewMonth === 0) {
-      setViewMonth(11);
+    if (mode === 'days') {
+      if (viewMonth === 0) {
+        setViewMonth(11);
+        setViewYear((y) => y - 1);
+      } else {
+        setViewMonth((m) => m - 1);
+      }
+    } else if (mode === 'months') {
       setViewYear((y) => y - 1);
-    } else {
-      setViewMonth((m) => m - 1);
+    } else if (mode === 'years') {
+      setYearPage((p) => p - 12);
     }
   };
 
-  const handleNextMonth = (e) => {
+  const handleNext = (e) => {
     e.stopPropagation();
-    if (viewMonth === 11) {
-      setViewMonth(0);
+    if (mode === 'days') {
+      if (viewMonth === 11) {
+        setViewMonth(0);
+        setViewYear((y) => y + 1);
+      } else {
+        setViewMonth((m) => m + 1);
+      }
+    } else if (mode === 'months') {
       setViewYear((y) => y + 1);
-    } else {
-      setViewMonth((m) => m + 1);
+    } else if (mode === 'years') {
+      setYearPage((p) => p + 12);
     }
   };
 
@@ -93,6 +114,17 @@ export default function LocaleDatePicker({
     const isoString = `${viewYear}-${mm}-${dd}`;
     onChange(isoString);
     setIsOpen(false);
+    setMode('days');
+  };
+
+  const handleSelectMonth = (mIdx) => {
+    setViewMonth(mIdx);
+    setMode('days');
+  };
+
+  const handleSelectYear = (yr) => {
+    setViewYear(yr);
+    setMode('days');
   };
 
   // Generate calendar days for viewMonth & viewYear
@@ -115,6 +147,11 @@ export default function LocaleDatePicker({
       selectedDate.getDate() === d
     );
   };
+
+  const yearsList = [];
+  for (let i = 0; i < 12; i++) {
+    yearsList.push(yearPage + i);
+  }
 
   return (
     <div ref={containerRef} className="locale-datepicker-container">
@@ -152,38 +189,138 @@ export default function LocaleDatePicker({
       {isOpen && (
         <div className="locale-datepicker-popup">
           <div className="datepicker-header">
-            <button type="button" className="datepicker-nav-btn" onClick={handlePrevMonth} aria-label="Previous month">
+            <button
+              type="button"
+              className="datepicker-nav-btn"
+              onClick={handlePrev}
+              aria-label="Previous"
+            >
               ‹
             </button>
-            <span className="datepicker-title">
-              {MONTHS[lang][viewMonth]} {viewYear}
-            </span>
-            <button type="button" className="datepicker-nav-btn" onClick={handleNextMonth} aria-label="Next month">
+            <div className="datepicker-title-group">
+              {mode === 'days' && (
+                <>
+                  <button
+                    type="button"
+                    className="datepicker-title-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMode('months');
+                    }}
+                    title={lang === 'fr' ? 'Choisir le mois' : 'Choose month'}
+                  >
+                    {MONTHS[lang][viewMonth]}
+                  </button>
+                  <button
+                    type="button"
+                    className="datepicker-title-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setYearPage(Math.floor(viewYear / 12) * 12);
+                      setMode('years');
+                    }}
+                    title={lang === 'fr' ? "Choisir l'année" : 'Choose year'}
+                  >
+                    {viewYear}
+                  </button>
+                </>
+              )}
+              {mode === 'months' && (
+                <>
+                  <span className="datepicker-title-static">
+                    {MONTHS[lang][viewMonth]}
+                  </span>
+                  <button
+                    type="button"
+                    className="datepicker-title-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setYearPage(Math.floor(viewYear / 12) * 12);
+                      setMode('years');
+                    }}
+                    title={lang === 'fr' ? "Choisir l'année" : 'Choose year'}
+                  >
+                    {viewYear}
+                  </button>
+                </>
+              )}
+              {mode === 'years' && (
+                <span className="datepicker-title-static">
+                  {yearPage} - {yearPage + 11}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="datepicker-nav-btn"
+              onClick={handleNext}
+              aria-label="Next"
+            >
               ›
             </button>
           </div>
 
-          <div className="datepicker-days-header">
-            {DAYS[lang].map((dayName, idx) => (
-              <span key={idx} className="datepicker-day-name">
-                {dayName}
-              </span>
-            ))}
-          </div>
+          {mode === 'days' && (
+            <>
+              <div className="datepicker-days-header">
+                {DAYS[lang].map((dayName, idx) => (
+                  <span key={idx} className="datepicker-day-name">
+                    {dayName}
+                  </span>
+                ))}
+              </div>
 
-          <div className="datepicker-days-grid">
-            {daysGrid.map((d, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`datepicker-day-cell ${!d ? 'empty' : ''} ${isDaySelected(d) ? 'selected' : ''}`}
-                disabled={!d}
-                onClick={() => d && handleSelectDay(d)}
-              >
-                {d || ''}
-              </button>
-            ))}
-          </div>
+              <div className="datepicker-days-grid">
+                {daysGrid.map((d, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`datepicker-day-cell ${!d ? 'empty' : ''} ${isDaySelected(d) ? 'selected' : ''}`}
+                    disabled={!d}
+                    onClick={() => d && handleSelectDay(d)}
+                  >
+                    {d || ''}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {mode === 'months' && (
+            <div className="datepicker-grid-3col">
+              {SHORT_MONTHS[lang].map((mName, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`datepicker-block-cell ${idx === viewMonth ? 'selected' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectMonth(idx);
+                  }}
+                >
+                  {mName}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {mode === 'years' && (
+            <div className="datepicker-grid-3col">
+              {yearsList.map((yr) => (
+                <button
+                  key={yr}
+                  type="button"
+                  className={`datepicker-block-cell ${yr === viewYear ? 'selected' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectYear(yr);
+                  }}
+                >
+                  {yr}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="datepicker-footer">
             <button
@@ -193,6 +330,7 @@ export default function LocaleDatePicker({
                 e.stopPropagation();
                 onChange('');
                 setIsOpen(false);
+                setMode('days');
               }}
             >
               {lang === 'fr' ? 'Effacer' : 'Clear'}
@@ -206,8 +344,11 @@ export default function LocaleDatePicker({
                 const y = now.getFullYear();
                 const m = String(now.getMonth() + 1).padStart(2, '0');
                 const d = String(now.getDate()).padStart(2, '0');
+                setViewYear(y);
+                setViewMonth(now.getMonth());
                 onChange(`${y}-${m}-${d}`);
                 setIsOpen(false);
+                setMode('days');
               }}
             >
               {lang === 'fr' ? "Aujourd'hui" : 'Today'}

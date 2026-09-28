@@ -1000,6 +1000,76 @@ a:hover {
     color: #333333;
 }
 
+.datepicker-title-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.datepicker-title-btn {
+    background: none;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: var(--font-segoe);
+    font-size: 13px;
+    font-weight: 600;
+    color: #333333;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.datepicker-title-btn:hover {
+    background-color: #EBF3FE;
+    color: #2E84FB;
+}
+
+.datepicker-title-static {
+    font-family: var(--font-segoe);
+    font-size: 13px;
+    font-weight: 600;
+    color: #333333;
+    padding: 2px 4px;
+}
+
+.datepicker-grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 6px 0;
+    min-height: 154px;
+}
+
+.datepicker-block-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-family: var(--font-segoe);
+    font-size: 12px;
+    color: #333333;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0;
+}
+
+.datepicker-block-cell:hover {
+    background-color: #EBF3FE;
+    color: #2E84FB;
+    border-color: #C2DCFE;
+}
+
+.datepicker-block-cell.selected {
+    background-color: #2E84FB !important;
+    color: #FFFFFF !important;
+    font-weight: bold;
+    border-color: #2E84FB;
+}
+
 .datepicker-nav-btn {
     background: none;
     border: none;
