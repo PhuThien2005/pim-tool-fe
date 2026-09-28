@@ -22,7 +22,7 @@ describe('UAT User Journey Tests', () => {
     // 2. Submit empty form -> error notice
     const createBtn = screen.getByRole('button', { name: /Create Project/i });
     fireEvent.click(createBtn);
-    expect(screen.getByText(/Please enter all the mandatory fields \(\*\)\./i)).toBeInTheDocument();
+    expect(await screen.findByText(/Please enter all the mandatory fields \(\*\)\./i)).toBeInTheDocument();
 
     // 3. Fill duplicate project number 3116 -> error notice
     fireEvent.change(screen.getByLabelText(/Project Number/i), { target: { value: '3116' } });
