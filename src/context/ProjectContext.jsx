@@ -16,7 +16,7 @@ export const defaultQueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: process.env.NODE_ENV !== 'test',
     },
   },
 });
