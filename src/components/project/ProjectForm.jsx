@@ -171,13 +171,7 @@ export default function ProjectForm({isEdit = false, projectId: propProjectId}) 
 
             // Determine error message banner (Requirement 11)
             let msg = t('common.unexpectedError');
-            const isDuplicateNumber =
-                code === 'DUPLICATE_NUMBER' ||
-                code === 'PROJECT_NUMBER_ALREADY_EXISTS' ||
-                /already exist/i.test(err.message || '') ||
-                /already exist/i.test(err.errors?.projectNumber || '');
-
-            if (isDuplicateNumber) {
+            if (code === 'DUPLICATE_NUMBER' || code === 'PROJECT_NUMBER_ALREADY_EXISTS') {
                 msg = t('projectForm.duplicateNumber');
             } else if (code === 'INVALID_END_DATE' || err.errors?.endDate) {
                 msg = t('projectForm.invalidEndDate');
