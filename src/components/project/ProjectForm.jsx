@@ -171,7 +171,13 @@ export default function ProjectForm({isEdit = false, projectId: propProjectId}) 
 
             // Determine error message banner (Requirement 11)
             let msg = t('common.unexpectedError');
-            if (code === 'DUPLICATE_NUMBER' || code === 'PROJECT_NUMBER_ALREADY_EXISTS' || err.errors?.projectNumber) {
+            const isDuplicateNumber =
+                code === 'DUPLICATE_NUMBER' ||
+                code === 'PROJECT_NUMBER_ALREADY_EXISTS' ||
+                /already exist/i.test(err.message || '') ||
+                /already exist/i.test(err.errors?.projectNumber || '');
+
+            if (isDuplicateNumber) {
                 msg = t('projectForm.duplicateNumber');
             } else if (code === 'INVALID_END_DATE' || err.errors?.endDate) {
                 msg = t('projectForm.invalidEndDate');
@@ -257,7 +263,7 @@ export default function ProjectForm({isEdit = false, projectId: propProjectId}) 
                 </div>
             )}
             <form onSubmit={handleSubmit(onSubmit, onFormError)} className="pim-form-body" noValidate>
-                {renderTextRow('projectNumber', 'projectNumber', 'projectNumber', undefined, 'input-sm', 'text', {
+                {renderTextRow('projectNumber', 'projectNumber', 'projectNumber', 4, 'input-sm', 'text', {
                     disabled: isEdit,
                     className: isEdit ? 'readonly-field' : '',
                     onKeyDown: (e) => {
